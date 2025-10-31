@@ -193,7 +193,7 @@ export function KnowledgeBaseSelector({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
-          className="w-80 max-h-[500px] overflow-y-auto"
+          className="w-80 max-h-[500px] overflow-y-auto bg-white dark:bg-gray-900"
           onCloseAutoFocus={(e) => {
             // Prevent auto-focus after closing to improve multi-select UX
             e.preventDefault();
