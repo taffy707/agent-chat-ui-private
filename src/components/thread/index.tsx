@@ -22,6 +22,7 @@ import {
   SquarePen,
   XIcon,
   Plus,
+  FileText,
 } from "lucide-react";
 import { useQueryState, parseAsBoolean } from "nuqs";
 import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
@@ -45,6 +46,8 @@ import {
   ArtifactTitle,
   useArtifactContext,
 } from "./artifact";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { DocumentManager } from "@/components/document-manager";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -124,6 +127,7 @@ export function Thread() {
     "hideToolCalls",
     parseAsBoolean.withDefault(false),
   );
+  const [documentManagerOpen, setDocumentManagerOpen] = useState(false);
   const [input, setInput] = useState("");
   const {
     contentBlocks,
@@ -377,6 +381,15 @@ export function Thread() {
                 <TooltipIconButton
                   size="lg"
                   className="p-4"
+                  tooltip="Document Manager"
+                  variant="ghost"
+                  onClick={() => setDocumentManagerOpen(true)}
+                >
+                  <FileText className="size-5" />
+                </TooltipIconButton>
+                <TooltipIconButton
+                  size="lg"
+                  className="p-4"
                   tooltip="New thread"
                   variant="ghost"
                   onClick={() => setThreadId(null)}
@@ -560,6 +573,16 @@ export function Thread() {
           </div>
         </div>
       </div>
+
+      {/* Document Manager Sheet */}
+      <Sheet open={documentManagerOpen} onOpenChange={setDocumentManagerOpen}>
+        <SheetContent side="right" className="w-full sm:max-w-4xl p-0">
+          <DocumentManager
+            userId="default-user"
+            onClose={() => setDocumentManagerOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

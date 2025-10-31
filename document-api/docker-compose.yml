@@ -1,0 +1,42 @@
+services:
+  # Document Upload API
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: document-api
+    environment:
+      # Google Cloud Configuration
+      GCP_PROJECT_ID: ${GCP_PROJECT_ID:-metatask-461115}
+      VERTEX_AI_DATA_STORE_ID: ${VERTEX_AI_DATA_STORE_ID:-metatask_1761751621392}
+      VERTEX_AI_LOCATION: ${VERTEX_AI_LOCATION:-global}
+      GCS_BUCKET_NAME: ${GCS_BUCKET_NAME:-metatask-documents-bucket}
+
+      # PostgreSQL Configuration (connects to host machine's PostgreSQL)
+      POSTGRES_HOST: host.docker.internal
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: tafadzwabwakura
+      POSTGRES_PASSWORD: ""
+      POSTGRES_DB: vertex_ai_documents
+
+      # Optional: Google Cloud Credentials
+      # Mount your credentials file and uncomment this:
+      # GOOGLE_APPLICATION_CREDENTIALS: /app/credentials/key.json
+    ports:
+      - "8000:8080"  # Map host port 8000 to container port 8080
+    volumes:
+      # Mount Google Cloud credentials from host machine
+      - ~/.config/gcloud:/root/.config/gcloud:ro
+    networks:
+      - document-api-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  document-api-network:
+    driver: bridge

@@ -1,0 +1,48 @@
+# Test Document for Vertex AI Search
+
+This is a comprehensive test document to verify the document upload and indexing workflow.
+
+## About Vertex AI Search
+
+Vertex AI Search is a fully-managed platform powered by large language models that enables developers to build AI-enabled search and recommendation experiences. It leverages Google's expertise in information retrieval and natural language processing.
+
+## Key Features
+
+1. **Automatic Text Extraction** - Extracts text from PDF, DOCX, and HTML files
+2. **Intelligent Chunking** - Optimally chunks documents for better search results  
+3. **Semantic Embeddings** - Generates embeddings for semantic search
+4. **Hybrid Search** - Combines keyword and semantic search
+5. **LLM-Powered Summaries** - Provides AI-generated summaries with citations
+
+## How It Works
+
+When you upload a document:
+- The file is stored in Google Cloud Storage
+- Vertex AI Search automatically processes it
+- Text is extracted and chunked
+- Embeddings are generated
+- The document is indexed for search
+
+## Benefits
+
+- No manual processing required
+- Google-quality search results
+- Scales automatically
+- Built-in LLM integration
+- Enterprise-grade security
+
+## Use Cases
+
+This technology is ideal for:
+- Enterprise knowledge bases
+- Customer support documentation
+- Research paper repositories
+- Legal document search
+- Technical documentation
+
+## Testing Information
+
+Document ID: TEST-DOC-001
+Upload Date: 2024-10-31
+Purpose: End-to-end workflow verification
+Status: Test document for FastAPI upload service

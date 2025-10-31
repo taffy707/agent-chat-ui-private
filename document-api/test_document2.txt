@@ -1,0 +1,28 @@
+# FastAPI Document Upload Service
+
+This is a second test document to demonstrate multiple file uploads.
+
+## Overview
+
+The FastAPI Document Upload Service provides a simple REST API for uploading documents to Vertex AI Search. It handles:
+
+- Multiple file uploads simultaneously
+- Automatic file validation
+- Unique filename generation with UUID prefixes
+- Direct upload to Google Cloud Storage
+- Triggering Vertex AI Search imports
+
+## Supported File Types
+
+- PDF (.pdf)
+- Microsoft Word (.docx)
+- Plain Text (.txt)
+- HTML (.html, .htm)
+
+## API Endpoints
+
+- GET /health - Check service status
+- POST /upload - Upload one or more documents
+- GET /operation/{name} - Check import status
+
+Test ID: TEST-DOC-002
