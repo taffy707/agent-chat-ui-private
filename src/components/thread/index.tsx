@@ -48,6 +48,7 @@ import {
 } from "./artifact";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { DocumentManager } from "@/components/document-manager";
+import { KnowledgeBaseSelector } from "./KnowledgeBaseSelector";
 
 function StickyToBottomContent(props: {
   content: ReactNode;
@@ -128,6 +129,7 @@ export function Thread() {
     parseAsBoolean.withDefault(false),
   );
   const [documentManagerOpen, setDocumentManagerOpen] = useState(false);
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
   const [input, setInput] = useState("");
   const {
     contentBlocks,
@@ -215,8 +217,11 @@ export function Thread() {
 
     const toolMessages = ensureToolCallsHaveResponses(stream.messages);
 
-    const context =
-      Object.keys(artifactContext).length > 0 ? artifactContext : undefined;
+    const context = {
+      ...artifactContext,
+      user_id: "default-user",
+      collection_ids: selectedCollectionIds,
+    };
 
     stream.submit(
       { messages: [...toolMessages, newHumanMessage], context },
@@ -497,6 +502,11 @@ export function Thread() {
                       />
 
                       <div className="flex items-center gap-6 p-2 pt-4">
+                        <KnowledgeBaseSelector
+                          userId="default-user"
+                          selectedCollectionIds={selectedCollectionIds}
+                          onSelectionChange={setSelectedCollectionIds}
+                        />
                         <div>
                           <div className="flex items-center space-x-2">
                             <Switch
