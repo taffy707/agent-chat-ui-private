@@ -6,7 +6,7 @@ import { documentApiClient } from "@/lib/document-api-client";
 import { Collection } from "@/types/document-api";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { DocumentManager } from "@/components/document-manager";
-import { ChevronDown, Plus, Loader2, AlertCircle, CheckCheck, X } from "lucide-react";
+import { ChevronDown, Plus, Loader2, AlertCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,16 +67,6 @@ export function KnowledgeBaseSelector({
       onSelectionChange([...selectedCollectionIds, collectionId]);
     }
   }, [selectedCollectionIds, onSelectionChange]);
-
-  const handleSelectAll = useCallback(() => {
-    onSelectionChange(collections.map((c) => c.id));
-    toast.success(`Selected all ${collections.length} collections`);
-  }, [collections, onSelectionChange]);
-
-  const handleClearAll = useCallback(() => {
-    onSelectionChange([]);
-    toast.success("Cleared collection selection");
-  }, [onSelectionChange]);
 
   const handleCreateNew = useCallback(() => {
     setDocumentManagerOpen(true);
@@ -210,32 +200,6 @@ export function KnowledgeBaseSelector({
             </span>
           </DropdownMenuLabel>
 
-          {/* Quick Actions */}
-          {collections.length > 1 && (
-            <div className="px-2 pb-2 flex gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSelectAll}
-                className="h-7 text-xs flex-1"
-                disabled={selectedCount === collections.length}
-              >
-                <CheckCheck className="h-3 w-3 mr-1" />
-                Select All
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearAll}
-                className="h-7 text-xs flex-1"
-                disabled={selectedCount === 0}
-              >
-                <X className="h-3 w-3 mr-1" />
-                Clear
-              </Button>
-            </div>
-          )}
-
           <DropdownMenuSeparator />
 
           {/* Collections List */}
@@ -250,7 +214,8 @@ export function KnowledgeBaseSelector({
                   // Prevent dropdown from closing on selection
                   e.preventDefault();
                 }}
-                className="cursor-pointer focus:bg-accent"
+                checkPosition="right"
+                className="cursor-pointer"
               >
                 <div className="flex flex-col gap-0.5 py-1 flex-1 min-w-0">
                   <span className="font-medium truncate">{collection.name}</span>
