@@ -131,6 +131,15 @@ export function Thread() {
   const [documentManagerOpen, setDocumentManagerOpen] = useState(false);
   const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
   const [input, setInput] = useState("");
+
+  // Debug: Log when selected collections change
+  useEffect(() => {
+    console.log("📚 Selected collections changed:", {
+      count: selectedCollectionIds.length,
+      ids: selectedCollectionIds,
+      isEmpty: selectedCollectionIds.length === 0
+    });
+  }, [selectedCollectionIds]);
   const {
     contentBlocks,
     setContentBlocks,
@@ -222,6 +231,13 @@ export function Thread() {
       user_id: "default-user",
       collection_ids: selectedCollectionIds,
     };
+
+    // Debug: Log what we're sending
+    console.log("🔍 Sending context to LangGraph:", {
+      user_id: context.user_id,
+      collection_ids: context.collection_ids,
+      collection_count: context.collection_ids?.length || 0
+    });
 
     stream.submit(
       { messages: [...toolMessages, newHumanMessage], context },
