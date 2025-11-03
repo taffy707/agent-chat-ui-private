@@ -35,7 +35,7 @@ class DeletionQueue:
             user_id VARCHAR(255) NOT NULL,
             original_filename VARCHAR(500),
             attempt_count INT DEFAULT 0,
-            max_attempts INT DEFAULT 10,
+            max_attempts INT DEFAULT 60,
             next_retry_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
             last_error TEXT,

@@ -135,6 +135,7 @@ class Database:
         file_type: str,
         file_size_bytes: int,
         content_type: str,
+        import_operation_id: Optional[str] = None,
     ) -> UUID:
         """
         Insert a new document record.
@@ -149,6 +150,7 @@ class Database:
             file_type: File extension (e.g., .pdf, .txt)
             file_size_bytes: File size in bytes
             content_type: MIME type of the file
+            import_operation_id: Vertex AI import operation ID for tracking
 
         Returns:
             UUID: The generated document ID
@@ -156,11 +158,15 @@ class Database:
         query = """
         INSERT INTO documents (
             user_id, collection_id, original_filename, gcs_blob_name, gcs_uri,
-            vertex_ai_doc_id, file_type, file_size_bytes, content_type
+            vertex_ai_doc_id, file_type, file_size_bytes, content_type,
+            import_operation_id, index_status
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING id
         """
+
+        # Set initial status based on whether we have an operation ID
+        index_status = 'indexing' if import_operation_id else 'pending'
 
         try:
             async with self.pool.acquire() as conn:
@@ -175,6 +181,8 @@ class Database:
                     file_type,
                     file_size_bytes,
                     content_type,
+                    import_operation_id,
+                    index_status,
                 )
             logger.info(f"✅ Document metadata saved to database: {doc_id}")
             return doc_id
@@ -656,6 +664,81 @@ class Database:
             return count
         except Exception as e:
             logger.error(f"❌ Failed to count collection documents: {str(e)}")
+            raise
+
+    async def update_document_index_status(
+        self,
+        document_id: UUID,
+        index_status: str,
+        index_completed_at: Optional[datetime] = None,
+    ) -> bool:
+        """
+        Update the indexing status of a document.
+
+        Args:
+            document_id: Document UUID
+            index_status: New status (pending, indexing, indexed, failed)
+            index_completed_at: Timestamp when indexing completed (optional)
+
+        Returns:
+            bool: True if update successful
+        """
+        if index_completed_at:
+            query = """
+            UPDATE documents
+            SET index_status = $1,
+                index_completed_at = $2,
+                updated_at = NOW()
+            WHERE id = $3
+            """
+            params = (index_status, index_completed_at, document_id)
+        else:
+            query = """
+            UPDATE documents
+            SET index_status = $1,
+                updated_at = NOW()
+            WHERE id = $2
+            """
+            params = (index_status, document_id)
+
+        try:
+            async with self.pool.acquire() as conn:
+                await conn.execute(query, *params)
+            logger.info(f"✅ Updated document {document_id} index_status to '{index_status}'")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Failed to update document index status: {str(e)}")
+            return False
+
+    async def get_documents_by_index_status(
+        self, index_status: str, limit: int = 100
+    ) -> List[Dict[str, Any]]:
+        """
+        Get documents by index status.
+
+        Args:
+            index_status: Status to filter by (pending, indexing, indexed, failed)
+            limit: Maximum number of documents to return
+
+        Returns:
+            List of document records
+        """
+        query = """
+        SELECT id, user_id, collection_id, vertex_ai_doc_id,
+               import_operation_id, index_status, index_completed_at,
+               original_filename, upload_date
+        FROM documents
+        WHERE index_status = $1
+        ORDER BY upload_date DESC
+        LIMIT $2
+        """
+
+        try:
+            async with self.pool.acquire() as conn:
+                rows = await conn.fetch(query, index_status, limit)
+                return [dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"❌ Failed to get documents by index status: {str(e)}")
             raise
 
 

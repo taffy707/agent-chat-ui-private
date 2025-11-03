@@ -26,6 +26,7 @@ from database import db
 from deletion_queue import DeletionQueue
 from gcs_uploader import GCSUploader
 from vertex_ai_importer import VertexAIImporter
+from index_status_worker import IndexStatusWorker
 
 # Configure logging
 logging.basicConfig(
@@ -67,14 +68,15 @@ vertex_ai_importer = VertexAIImporter(
     data_store_id=settings.VERTEX_AI_DATA_STORE_ID,
 )
 
-# Initialize deletion queue (will be fully initialized on startup)
+# Initialize background workers (will be fully initialized on startup)
 deletion_queue = None
+index_status_worker = None
 
 
 @app.on_event("startup")
 async def startup_event():
     """Run startup checks."""
-    global deletion_queue
+    global deletion_queue, index_status_worker
 
     logger.info("Starting Document Upload API...")
     logger.info(f"GCP Project: {settings.GCP_PROJECT_ID}")
@@ -89,8 +91,12 @@ async def startup_event():
     deletion_queue = DeletionQueue(db.pool, vertex_ai_importer)
     await deletion_queue.initialize_schema()
 
-    # Start background worker for deletion queue (checks every 60 seconds)
+    # Initialize index status worker
+    index_status_worker = IndexStatusWorker(vertex_ai_importer)
+
+    # Start background workers
     asyncio.create_task(deletion_queue.start_background_worker(interval_seconds=60))
+    asyncio.create_task(index_status_worker.start_background_worker(interval_seconds=120))
 
     # Ensure bucket exists
     if not gcs_uploader.ensure_bucket_exists():
@@ -639,6 +645,7 @@ async def upload_documents(
                 file_type=doc["file_type"],
                 file_size_bytes=doc["size_bytes"],
                 content_type=doc["content_type"],
+                import_operation_id=import_operation if import_success else None,
             )
             doc["db_id"] = str(doc_id)
             db_saved_documents.append(doc)
@@ -782,6 +789,14 @@ async def delete_document(
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"You do not have permission to delete this document",
+            )
+
+        # Check if document is still indexing
+        index_status = document.get("index_status", "indexed")
+        if index_status in ["pending", "indexing"]:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Cannot delete document while it is still being indexed. Status: {index_status}. Please wait for indexing to complete.",
             )
 
         # Step 2: Delete from GCS (specific file, not bucket)

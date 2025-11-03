@@ -10,6 +10,8 @@ export interface Collection {
   updated_at: string;
 }
 
+export type IndexStatus = "pending" | "indexing" | "indexed" | "failed";
+
 export interface Document {
   id: string;
   user_id: string;
@@ -24,6 +26,9 @@ export interface Document {
   content_type: string;
   upload_date: string;
   status: string;
+  index_status: IndexStatus;
+  import_operation_id?: string | null;
+  index_completed_at?: string | null;
   created_at: string;
   updated_at: string;
 }

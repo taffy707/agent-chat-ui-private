@@ -17,6 +17,9 @@ import {
   Folder,
   FileText,
   Loader2,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
 } from "lucide-react";
 import { Collection } from "@/types/document-api";
 import { cn } from "@/lib/utils";
@@ -159,6 +162,35 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
     return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+  };
+
+  const getIndexStatusBadge = (indexStatus: string) => {
+    switch (indexStatus) {
+      case "indexing":
+      case "pending":
+        return (
+          <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+            <Clock className="h-3 w-3 animate-pulse" />
+            Processing...
+          </span>
+        );
+      case "indexed":
+        return (
+          <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+            <CheckCircle2 className="h-3 w-3" />
+            Ready
+          </span>
+        );
+      case "failed":
+        return (
+          <span className="inline-flex items-center gap-1 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+            <AlertCircle className="h-3 w-3" />
+            Failed
+          </span>
+        );
+      default:
+        return null;
+    }
   };
 
   return (
@@ -357,41 +389,53 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {documents.map((doc) => (
-                      <Card key={doc.id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-start gap-3 flex-1">
-                              <FileText className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium truncate">
-                                  {doc.original_filename}
-                                </div>
-                                <div className="text-sm text-muted-foreground mt-1">
-                                  {formatFileSize(doc.file_size_bytes)} •{" "}
-                                  {doc.file_type} • {doc.status}
-                                </div>
-                                <div className="text-xs text-muted-foreground mt-1">
-                                  {new Date(doc.upload_date).toLocaleString()}
+                    {documents.map((doc) => {
+                      const isIndexing = doc.index_status === "indexing" || doc.index_status === "pending";
+                      return (
+                        <Card key={doc.id}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start gap-3 flex-1">
+                                <FileText className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <div className="font-medium truncate">
+                                      {doc.original_filename}
+                                    </div>
+                                    {getIndexStatusBadge(doc.index_status)}
+                                  </div>
+                                  <div className="text-sm text-muted-foreground mt-1">
+                                    {formatFileSize(doc.file_size_bytes)} •{" "}
+                                    {doc.file_type}
+                                  </div>
+                                  <div className="text-xs text-muted-foreground mt-1">
+                                    {new Date(doc.upload_date).toLocaleString()}
+                                  </div>
                                 </div>
                               </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  handleDeleteDocument(
+                                    doc.id,
+                                    doc.original_filename
+                                  )
+                                }
+                                disabled={isIndexing}
+                                title={
+                                  isIndexing
+                                    ? "Cannot delete while document is being processed"
+                                    : "Delete document"
+                                }
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                handleDeleteDocument(
-                                  doc.id,
-                                  doc.original_filename
-                                )
-                              }
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </div>
