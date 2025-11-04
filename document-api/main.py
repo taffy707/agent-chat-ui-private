@@ -12,6 +12,7 @@ Based on patterns from:
 
 import asyncio
 import logging
+import re
 from pathlib import Path
 from typing import List, Optional
 from uuid import UUID
@@ -617,40 +618,69 @@ async def upload_documents(
             },
         )
 
-    # Trigger Vertex AI Search import (bulk import - auto-generates IDs)
-    import_success = False
-    import_operation = None
+    # Import documents to Vertex AI Search with metadata (for collection filtering)
+    # Using create_document_with_id instead of bulk import to preserve metadata
+    import_successes = []
+    import_failures = []
 
-    try:
-        import_success, import_operation = vertex_ai_importer.import_documents_from_gcs(
-            gcs_uris=gcs_uris, reconciliation_mode="INCREMENTAL"
-        )
+    for doc in uploaded_documents:
+        try:
+            # Prepare metadata for Vertex AI Search filtering
+            vertex_metadata = {
+                "collection_id": str(collection_id),
+                "collection_name": collection["name"],
+                "user_id": user_id,
+                "original_filename": doc["original_filename"],
+            }
 
-        if import_success:
-            logger.info(
-                f"Successfully triggered Vertex AI Search import. Operation: {import_operation}"
+            # Vertex AI document IDs can only contain [a-zA-Z0-9-_]* (no periods, spaces, etc.)
+            vertex_doc_id = Path(doc["document_id"]).stem  # Removes extension
+            # Replace all invalid characters (periods, spaces, parentheses, etc.) with underscores
+            vertex_doc_id = re.sub(r'[^a-zA-Z0-9_-]', '_', vertex_doc_id)
+
+            logger.info(f"Creating document in Vertex AI with ID: {vertex_doc_id}, metadata: {vertex_metadata}")
+
+            success, message = vertex_ai_importer.create_document_with_id(
+                document_id=vertex_doc_id,  # Use blob_name WITHOUT extension
+                gcs_uri=doc["gcs_uri"],
+                mime_type=doc["content_type"],
+                metadata=vertex_metadata,
             )
-        else:
-            logger.error(f"Failed to trigger import: {import_operation}")
 
-    except Exception as e:
-        error_msg = f"Failed to trigger Vertex AI Search import: {str(e)}"
-        logger.error(error_msg)
-        # Don't fail the request - files are uploaded, import can be retried
-        import_operation = error_msg
+            if success:
+                logger.info(f"✅ Successfully created document in Vertex AI: {vertex_doc_id}")
+                import_successes.append(vertex_doc_id)
+            else:
+                logger.error(f"❌ Failed to create document in Vertex AI: {message}")
+                import_failures.append({"document_id": doc["document_id"], "error": message})
+
+        except Exception as e:
+            error_msg = f"Failed to create document in Vertex AI: {str(e)}"
+            logger.error(f"Error for {doc['document_id']}: {error_msg}")
+            import_failures.append({"document_id": doc["document_id"], "error": error_msg})
+
+    import_success = len(import_successes) > 0
+    import_operation = (
+        f"Created {len(import_successes)} documents with metadata"
+        if import_success
+        else "Failed to create documents in Vertex AI"
+    )
 
     # Save document metadata to PostgreSQL
     db_saved_documents = []
     for doc in uploaded_documents:
         try:
-            # Use blob_name as vertex_ai_doc_id (matches GCS)
+            # Use blob_name WITHOUT extension as vertex_ai_doc_id (matches Vertex AI)
+            vertex_doc_id = Path(doc["document_id"]).stem
+            # Replace all invalid characters (periods, spaces, etc.) with underscores
+            vertex_doc_id = re.sub(r'[^a-zA-Z0-9_-]', '_', vertex_doc_id)
             doc_id = await db.insert_document(
                 user_id=user_id,
                 collection_id=collection_id,
                 original_filename=doc["original_filename"],
                 gcs_blob_name=doc["gcs_blob_name"],
                 gcs_uri=doc["gcs_uri"],
-                vertex_ai_doc_id=doc["document_id"],
+                vertex_ai_doc_id=vertex_doc_id,  # Store WITHOUT extension
                 file_type=doc["file_type"],
                 file_size_bytes=doc["size_bytes"],
                 content_type=doc["content_type"],
@@ -672,14 +702,19 @@ async def upload_documents(
         "documents": uploaded_documents,
         "vertex_ai_import": {
             "triggered": import_success,
+            "successes": len(import_successes),
+            "failures": len(import_failures),
             "operation_name": import_operation if import_success else None,
             "status_message": (
-                "Vertex AI Search is now processing, chunking, embedding, and indexing your documents"
+                f"✅ Created {len(import_successes)} document(s) in Vertex AI Search with collection metadata for filtering"
                 if import_success
-                else "Import not triggered - files are in GCS but indexing needs to be triggered manually"
+                else "❌ Import failed - files are in GCS but indexing failed"
             ),
         },
     }
+
+    if import_failures:
+        response["vertex_ai_import"]["failed_imports"] = import_failures
 
     if failed_uploads:
         response["failed_uploads"] = failed_uploads
