@@ -398,10 +398,10 @@ async def delete_collection(
             except Exception as e:
                 logger.error(f"Failed to delete from GCS: {doc['gcs_blob_name']} - {e}")
 
-            # Queue Vertex AI deletion
+            # Delete from Vertex AI using URI (reliable method)
             try:
-                vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document(
-                    doc["vertex_ai_doc_id"]
+                vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document_by_uri(
+                    gcs_uri=doc["gcs_uri"]
                 )
                 if vertex_ai_success:
                     logger.info(f"✅ Deleted from Vertex AI: {doc['vertex_ai_doc_id']}")
@@ -562,12 +562,21 @@ async def upload_documents(
                 failed_uploads.append({"filename": file.filename, "error": error_msg})
                 continue
 
-            # Upload to GCS
+            # Upload to GCS with collection metadata
             try:
+                # Prepare GCS metadata for collection filtering
+                gcs_metadata = {
+                    "collection_id": str(collection_id),
+                    "collection_name": collection["name"],
+                    "user_id": user_id,
+                    "original_filename": file.filename,
+                }
+
                 gcs_uri, blob_name = gcs_uploader.upload_file(
                     file_content=file_content,
                     original_filename=file.filename,
                     content_type=file.content_type,
+                    metadata=gcs_metadata,
                 )
 
                 gcs_uris.append(gcs_uri)
@@ -608,7 +617,7 @@ async def upload_documents(
             },
         )
 
-    # Trigger Vertex AI Search import
+    # Trigger Vertex AI Search import (bulk import - auto-generates IDs)
     import_success = False
     import_operation = None
 
@@ -634,7 +643,7 @@ async def upload_documents(
     db_saved_documents = []
     for doc in uploaded_documents:
         try:
-            # Use blob_name as vertex_ai_doc_id since that's what Vertex AI will use
+            # Use blob_name as vertex_ai_doc_id (matches GCS)
             doc_id = await db.insert_document(
                 user_id=user_id,
                 collection_id=collection_id,
@@ -747,6 +756,83 @@ async def list_user_documents(
         )
 
 
+@app.get("/debug/vertex-ai-documents", tags=["Debug"])
+async def list_vertex_ai_documents(
+    page_size: int = Query(100, ge=1, le=1000, description="Number of documents to return"),
+):
+    """
+    DEBUG ENDPOINT: List all documents currently in Vertex AI Search datastore.
+
+    This is useful for debugging document ID mismatches between PostgreSQL
+    and Vertex AI Search. It shows the actual document IDs that Vertex AI
+    is using, which should match the gcs_blob_name in your database.
+
+    Args:
+        page_size: Number of documents to return (max 1000)
+
+    Returns:
+        List of documents with their IDs, names, URIs, and metadata
+    """
+    try:
+        documents = vertex_ai_importer.list_documents(page_size=page_size)
+
+        return {
+            "status": "success",
+            "count": len(documents),
+            "documents": documents,
+            "note": "Compare the 'id' field here with the 'vertex_ai_doc_id' in your PostgreSQL database. They should match!",
+        }
+
+    except Exception as e:
+        logger.error(f"Error listing Vertex AI documents: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list Vertex AI documents: {str(e)}",
+        )
+
+
+@app.get("/debug/verify-document/{vertex_ai_doc_id}", tags=["Debug"])
+async def verify_document_in_vertex_ai(
+    vertex_ai_doc_id: str,
+):
+    """
+    DEBUG ENDPOINT: Check if a specific document exists in Vertex AI Search.
+
+    Use this to verify that a document has been successfully deleted or
+    that it exists after upload.
+
+    Args:
+        vertex_ai_doc_id: The document ID to check (should match gcs_blob_name)
+
+    Returns:
+        Document existence status and data if it exists
+    """
+    try:
+        exists, doc_data = vertex_ai_importer.get_document(vertex_ai_doc_id)
+
+        if exists:
+            return {
+                "status": "found",
+                "exists": True,
+                "message": f"✅ Document exists in Vertex AI Search",
+                "document": doc_data,
+            }
+        else:
+            return {
+                "status": "not_found",
+                "exists": False,
+                "message": f"❌ Document does NOT exist in Vertex AI Search (deleted or never indexed)",
+                "document_id": vertex_ai_doc_id,
+            }
+
+    except Exception as e:
+        logger.error(f"Error verifying document in Vertex AI: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to verify document: {str(e)}",
+        )
+
+
 @app.delete("/documents/{doc_id}", tags=["Documents"])
 async def delete_document(
     doc_id: UUID,
@@ -808,13 +894,30 @@ async def delete_document(
             logger.error(f"Failed to delete from GCS: {str(e)}")
             # Continue with deletion - file might already be gone
 
-        # Step 3: Delete from Vertex AI Search (with retry queue fallback)
+        # Step 3: Delete from Vertex AI Search using URI (works around ID mismatch)
+        vertex_ai_deleted = False
+        vertex_ai_verification = None
+
         try:
-            vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document(
-                vertex_ai_doc_id=document["vertex_ai_doc_id"]
+            # Use URI-based deletion (reliable method)
+            vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document_by_uri(
+                gcs_uri=document["gcs_uri"]
             )
             if vertex_ai_success:
                 logger.info(f"✅ Deleted from Vertex AI: {document['vertex_ai_doc_id']}")
+                vertex_ai_deleted = True
+
+                # Verify deletion by checking if document still exists
+                import time
+                time.sleep(1)  # Brief wait for deletion to propagate
+                verified, verify_msg = vertex_ai_importer.verify_deletion(
+                    document["vertex_ai_doc_id"]
+                )
+                vertex_ai_verification = {
+                    "verified": verified,
+                    "message": verify_msg
+                }
+                logger.info(verify_msg)
             else:
                 # Failed to delete - add to retry queue
                 if "404" in vertex_ai_msg or "does not exist" in vertex_ai_msg.lower():
@@ -847,7 +950,7 @@ async def delete_document(
                 detail="Failed to delete document metadata from database",
             )
 
-        return {
+        response = {
             "status": "success",
             "message": f"Document {doc_id} deleted successfully",
             "deleted": {
@@ -856,7 +959,17 @@ async def delete_document(
                 "gcs_blob_name": document["gcs_blob_name"],
                 "vertex_ai_doc_id": document["vertex_ai_doc_id"],
             },
+            "deletion_status": {
+                "postgresql": True,
+                "gcs": gcs_deleted,
+                "vertex_ai": vertex_ai_deleted,
+            }
         }
+
+        if vertex_ai_verification:
+            response["vertex_ai_verification"] = vertex_ai_verification
+
+        return response
 
     except HTTPException:
         raise  # Re-raise HTTP exceptions

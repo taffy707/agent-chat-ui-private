@@ -49,15 +49,20 @@ class GCSUploader:
         return f"{unique_id}_{file_path.stem}{file_extension}"
 
     def upload_file(
-        self, file_content: bytes, original_filename: str, content_type: str
+        self,
+        file_content: bytes,
+        original_filename: str,
+        content_type: str,
+        metadata: dict = None
     ) -> tuple[str, str]:
         """
-        Upload file to GCS bucket.
+        Upload file to GCS bucket with optional metadata.
 
         Args:
             file_content: File content as bytes
             original_filename: Original filename
             content_type: MIME type of the file
+            metadata: Optional custom metadata (e.g., collection info, user_id)
 
         Returns:
             Tuple of (gcs_uri, blob_name)
@@ -71,6 +76,12 @@ class GCSUploader:
 
             # Create blob and upload
             blob = self.bucket.blob(blob_name)
+
+            # Set custom metadata if provided
+            if metadata:
+                blob.metadata = metadata
+                logger.info(f"Setting GCS metadata: {metadata}")
+
             blob.upload_from_string(file_content, content_type=content_type)
 
             # Construct GCS URI
