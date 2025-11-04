@@ -399,10 +399,10 @@ async def delete_collection(
             except Exception as e:
                 logger.error(f"Failed to delete from GCS: {doc['gcs_blob_name']} - {e}")
 
-            # Delete from Vertex AI using URI (reliable method)
+            # Delete from Vertex AI using known document ID (simplified)
             try:
-                vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document_by_uri(
-                    gcs_uri=doc["gcs_uri"]
+                vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document(
+                    vertex_ai_doc_id=doc["vertex_ai_doc_id"]
                 )
                 if vertex_ai_success:
                     logger.info(f"✅ Deleted from Vertex AI: {doc['vertex_ai_doc_id']}")
@@ -929,14 +929,15 @@ async def delete_document(
             logger.error(f"Failed to delete from GCS: {str(e)}")
             # Continue with deletion - file might already be gone
 
-        # Step 3: Delete from Vertex AI Search using URI (works around ID mismatch)
+        # Step 3: Delete from Vertex AI Search using known document ID
+        # Now that we sanitize and control document IDs, we can delete directly
         vertex_ai_deleted = False
         vertex_ai_verification = None
 
         try:
-            # Use URI-based deletion (reliable method)
-            vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document_by_uri(
-                gcs_uri=document["gcs_uri"]
+            # Direct deletion by document ID (simplified since we now know the exact ID)
+            vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document(
+                vertex_ai_doc_id=document["vertex_ai_doc_id"]
             )
             if vertex_ai_success:
                 logger.info(f"✅ Deleted from Vertex AI: {document['vertex_ai_doc_id']}")

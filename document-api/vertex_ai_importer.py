@@ -338,12 +338,15 @@ class VertexAIImporter:
         """
         Delete a document from Vertex AI Search by its GCS URI.
 
-        This is the RELIABLE method that works around ID mismatches by:
-        1. Listing all documents
-        2. Finding the one with matching URI
-        3. Deleting by its actual hash ID
+        DEPRECATED: This method is complex and slow (lists all documents to find match).
+        Now that we use sanitized document IDs, prefer using delete_document() directly.
 
-        This is necessary because Vertex AI auto-generates hash IDs that don't match our blob names.
+        This method:
+        1. Lists all documents (expensive!)
+        2. Finds the one with matching URI
+        3. Deletes by its actual ID
+
+        Only use this for legacy documents uploaded before ID sanitization fix.
 
         Args:
             gcs_uri: The GCS URI (e.g., gs://bucket/blob_name.pdf)
@@ -390,10 +393,11 @@ class VertexAIImporter:
         """
         Delete a specific document from Vertex AI Search by its document ID.
 
-        NOTE: Due to ID mismatches, prefer using delete_document_by_uri() instead.
+        This is the PREFERRED method now that we use sanitized document IDs.
+        Much faster and simpler than delete_document_by_uri().
 
         Args:
-            vertex_ai_doc_id: The document ID in Vertex AI Search (hash ID)
+            vertex_ai_doc_id: The document ID in Vertex AI Search (sanitized ID from PostgreSQL)
 
         Returns:
             Tuple of (success: bool, message: str)
