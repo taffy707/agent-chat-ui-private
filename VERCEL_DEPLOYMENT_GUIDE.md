@@ -12,11 +12,13 @@
 **Problem:** Document API was only configured to accept requests from `localhost`, blocking Vercel domains.
 
 **Solution Applied:**
+
 - Updated `/document-api/main.py` to allow all origins temporarily
 - Rebuilt and redeployed to Cloud Run (revision: document-api-00003-468)
 - **Status:** FIXED ✅
 
 **Verification:**
+
 ```bash
 curl https://document-api-169798107925.us-central1.run.app/health
 # Should return 200 OK
@@ -27,11 +29,13 @@ curl https://document-api-169798107925.us-central1.run.app/health
 ### ⚠️ Issue 2: HTTP/HTTPS Mixed Content Blocking (NEEDS FIX)
 
 **Problem:**
+
 - Your Vercel site uses HTTPS: `https://your-app.vercel.app`
 - Your LangGraph server uses HTTP: `http://136.116.156.246:8123`
 - Modern browsers **block HTTP requests from HTTPS pages** for security
 
 **Error in Browser Console:**
+
 ```
 Mixed Content: The page at 'https://your-app.vercel.app' was loaded over HTTPS,
 but requested an insecure XMLHttpRequest endpoint 'http://136.116.156.246:8123'.
@@ -43,7 +47,9 @@ This request has been blocked; the content must be served over HTTPS.
 #### Option A: Enable HTTPS for Your LangGraph Server (Recommended)
 
 **Using Cloudflare Tunnel (Free & Easy):**
+
 1. Install cloudflared:
+
    ```bash
    # macOS
    brew install cloudflare/cloudflare/cloudflared
@@ -54,16 +60,19 @@ This request has been blocked; the content must be served over HTTPS.
    ```
 
 2. Authenticate with Cloudflare:
+
    ```bash
    cloudflared tunnel login
    ```
 
 3. Create a tunnel:
+
    ```bash
    cloudflared tunnel create langgraph-server
    ```
 
 4. Configure the tunnel (create `config.yml`):
+
    ```yaml
    tunnel: <TUNNEL-ID>
    credentials-file: /path/to/.cloudflared/<TUNNEL-ID>.json
@@ -75,6 +84,7 @@ This request has been blocked; the content must be served over HTTPS.
    ```
 
 5. Route DNS:
+
    ```bash
    cloudflared tunnel route dns <TUNNEL-ID> langgraph.yourdomain.com
    ```
@@ -91,6 +101,7 @@ This request has been blocked; the content must be served over HTTPS.
 #### Option B: Deploy LangGraph to Cloud Run (Automatic HTTPS)
 
 **Advantages:**
+
 - Automatic HTTPS
 - Auto-scaling
 - Same infrastructure as Document API
@@ -99,6 +110,7 @@ This request has been blocked; the content must be served over HTTPS.
 **Steps:**
 
 1. **Create Dockerfile for LangGraph** (if not exists):
+
    ```dockerfile
    FROM python:3.11-slim
 
@@ -119,12 +131,14 @@ This request has been blocked; the content must be served over HTTPS.
    ```
 
 2. **Build and push to GCR:**
+
    ```bash
    cd /path/to/langgraph/server
    gcloud builds submit --tag gcr.io/metatask-461115/langgraph-server
    ```
 
 3. **Deploy to Cloud Run:**
+
    ```bash
    gcloud run deploy langgraph-server \
        --image gcr.io/metatask-461115/langgraph-server \
@@ -137,6 +151,7 @@ This request has been blocked; the content must be served over HTTPS.
    ```
 
 4. **Get URL:**
+
    ```bash
    gcloud run services describe langgraph-server \
        --region us-central1 \
@@ -157,12 +172,14 @@ This request has been blocked; the content must be served over HTTPS.
 **For existing VPS/dedicated server:**
 
 1. **Install Nginx:**
+
    ```bash
    sudo apt-get update
    sudo apt-get install nginx certbot python3-certbot-nginx
    ```
 
 2. **Configure Nginx** (`/etc/nginx/sites-available/langgraph`):
+
    ```nginx
    server {
        server_name langgraph.yourdomain.com;
@@ -179,6 +196,7 @@ This request has been blocked; the content must be served over HTTPS.
    ```
 
 3. **Enable site:**
+
    ```bash
    sudo ln -s /etc/nginx/sites-available/langgraph /etc/nginx/sites-enabled/
    sudo nginx -t
@@ -234,10 +252,10 @@ git push origin main
 
 In Vercel dashboard, add:
 
-| Name | Value | Environments |
-|------|-------|--------------|
-| `NEXT_PUBLIC_API_URL` | `https://langgraph.yourdomain.com` (after HTTPS setup) | Production, Preview, Development |
-| `NEXT_PUBLIC_ASSISTANT_ID` | `retrieval_graph` | Production, Preview, Development |
+| Name                           | Value                                                   | Environments                     |
+| ------------------------------ | ------------------------------------------------------- | -------------------------------- |
+| `NEXT_PUBLIC_API_URL`          | `https://langgraph.yourdomain.com` (after HTTPS setup)  | Production, Preview, Development |
+| `NEXT_PUBLIC_ASSISTANT_ID`     | `retrieval_graph`                                       | Production, Preview, Development |
 | `NEXT_PUBLIC_DOCUMENT_API_URL` | `https://document-api-169798107925.us-central1.run.app` | Production, Preview, Development |
 
 **Note:** Select all three environments (Production, Preview, Development) for each variable.
@@ -245,6 +263,7 @@ In Vercel dashboard, add:
 ### Step 4: Deploy
 
 Click **"Deploy"** - Vercel will:
+
 1. Install dependencies (`pnpm install`)
 2. Build your Next.js app (`pnpm build`)
 3. Deploy to CDN
@@ -289,12 +308,14 @@ After deployment, test these features:
 ### Issue: "CORS" Error
 
 **Symptom:**
+
 ```
 Access to XMLHttpRequest at 'https://document-api...' from origin 'https://your-app.vercel.app'
 has been blocked by CORS policy
 ```
 
 **Solution:**
+
 1. Get your exact Vercel URL (e.g., `https://agent-chat-ui-abc123.vercel.app`)
 2. Update `document-api/main.py`:
    ```python
@@ -312,6 +333,7 @@ has been blocked by CORS policy
 **Symptom:** App can't connect to APIs
 
 **Solution:**
+
 1. Verify variables are set in Vercel dashboard
 2. Make sure they're selected for "Production" environment
 3. Redeploy: Vercel → Deployments → Click "..." → Redeploy
@@ -323,6 +345,7 @@ has been blocked by CORS policy
 **Symptom:** All requests to LangGraph fail
 
 **Solution:**
+
 1. Verify LangGraph server is running: `curl http://136.116.156.246:8123/threads`
 2. Check if port 8123 is accessible from internet (not blocked by firewall)
 3. Verify `NEXT_PUBLIC_ASSISTANT_ID=retrieval_graph` matches your graph name
@@ -357,6 +380,7 @@ Before going live:
 ### ⚠️ What Needs Attention
 
 1. **LangGraph Server:** Needs HTTPS
+
    - Current: `http://136.116.156.246:8123` (HTTP only)
    - Required: HTTPS URL for Vercel compatibility
    - **Action Required:** Choose and implement Option A, B, or C above
@@ -372,11 +396,13 @@ Before going live:
 Once you've enabled HTTPS for LangGraph:
 
 1. **Update Vercel Environment Variables:**
+
    ```
    NEXT_PUBLIC_API_URL=https://your-langgraph-https-url
    ```
 
 2. **Trigger Redeploy in Vercel:**
+
    - Go to Vercel dashboard
    - Click "Deployments"
    - Click "..." on latest deployment
@@ -397,12 +423,14 @@ Once you've enabled HTTPS for LangGraph:
 
 **Q: Which HTTPS option should I choose?**
 A:
+
 - Have a VPS/server? → Option C (Nginx + Let's Encrypt)
 - Want easiest setup? → Option A (Cloudflare Tunnel)
 - Want same infrastructure? → Option B (Cloud Run)
 
 **Q: How much will this cost?**
 A:
+
 - Vercel: Free tier (generous limits)
 - Cloudflare Tunnel: Free
 - Cloud Run: ~$5-15/month (with your credits = free for years)
@@ -426,4 +454,3 @@ A: Yes! Everything works locally with HTTP. The HTTPS requirement only applies t
 **Document API Status:** ✅ Deployed and configured
 **LangGraph HTTPS:** ⚠️ Needs setup
 **Vercel Deployment:** ⏳ Ready after HTTPS setup
-
