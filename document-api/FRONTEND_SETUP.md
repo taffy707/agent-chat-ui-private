@@ -5,6 +5,7 @@
 ### Step 1: Keep Projects Separate
 
 **Recommended Structure:**
+
 ```
 your-workspace/
 ├── your-frontend/              # Your existing TypeScript frontend
@@ -120,14 +121,16 @@ export interface DeleteResponse {
 export class DocumentApiClient {
   private baseUrl: string;
 
-  constructor(baseUrl: string = 'http://localhost:8000') {
+  constructor(baseUrl: string = "http://localhost:8000") {
     this.baseUrl = baseUrl;
   }
 
   // Helper method to handle responses
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      const error = await response
+        .json()
+        .catch(() => ({ detail: "Unknown error" }));
       throw new Error(error.detail || `HTTP ${response.status}`);
     }
     return response.json();
@@ -140,15 +143,15 @@ export class DocumentApiClient {
   async createCollection(
     userId: string,
     name: string,
-    description?: string
+    description?: string,
   ): Promise<Collection> {
     const formData = new FormData();
-    formData.append('user_id', userId);
-    formData.append('name', name);
-    if (description) formData.append('description', description);
+    formData.append("user_id", userId);
+    formData.append("name", name);
+    if (description) formData.append("description", description);
 
     const response = await fetch(`${this.baseUrl}/collections`, {
-      method: 'POST',
+      method: "POST",
       body: formData,
     });
 
@@ -158,7 +161,7 @@ export class DocumentApiClient {
   async listCollections(
     userId: string,
     limit: number = 100,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<CollectionListResponse> {
     const params = new URLSearchParams({
       user_id: userId,
@@ -170,9 +173,14 @@ export class DocumentApiClient {
     return this.handleResponse<CollectionListResponse>(response);
   }
 
-  async getCollection(collectionId: string, userId: string): Promise<Collection> {
+  async getCollection(
+    collectionId: string,
+    userId: string,
+  ): Promise<Collection> {
     const params = new URLSearchParams({ user_id: userId });
-    const response = await fetch(`${this.baseUrl}/collections/${collectionId}?${params}`);
+    const response = await fetch(
+      `${this.baseUrl}/collections/${collectionId}?${params}`,
+    );
     return this.handleResponse<Collection>(response);
   }
 
@@ -180,7 +188,7 @@ export class DocumentApiClient {
     collectionId: string,
     userId: string,
     limit: number = 100,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<DocumentListResponse> {
     const params = new URLSearchParams({
       user_id: userId,
@@ -189,16 +197,19 @@ export class DocumentApiClient {
     });
 
     const response = await fetch(
-      `${this.baseUrl}/collections/${collectionId}/documents?${params}`
+      `${this.baseUrl}/collections/${collectionId}/documents?${params}`,
     );
     return this.handleResponse<DocumentListResponse>(response);
   }
 
-  async deleteCollection(collectionId: string, userId: string): Promise<DeleteResponse> {
+  async deleteCollection(
+    collectionId: string,
+    userId: string,
+  ): Promise<DeleteResponse> {
     const params = new URLSearchParams({ user_id: userId });
     const response = await fetch(
       `${this.baseUrl}/collections/${collectionId}?${params}`,
-      { method: 'DELETE' }
+      { method: "DELETE" },
     );
     return this.handleResponse<DeleteResponse>(response);
   }
@@ -211,18 +222,18 @@ export class DocumentApiClient {
     userId: string,
     collectionId: string,
     files: File[],
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
   ): Promise<UploadResponse> {
     const formData = new FormData();
-    formData.append('user_id', userId);
-    formData.append('collection_id', collectionId);
+    formData.append("user_id", userId);
+    formData.append("collection_id", collectionId);
 
     files.forEach((file) => {
-      formData.append('files', file);
+      formData.append("files", file);
     });
 
     const response = await fetch(`${this.baseUrl}/upload`, {
-      method: 'POST',
+      method: "POST",
       body: formData,
     });
 
@@ -232,7 +243,7 @@ export class DocumentApiClient {
   async listAllDocuments(
     userId: string,
     limit: number = 100,
-    offset: number = 0
+    offset: number = 0,
   ): Promise<DocumentListResponse> {
     const params = new URLSearchParams({
       user_id: userId,
@@ -244,11 +255,14 @@ export class DocumentApiClient {
     return this.handleResponse<DocumentListResponse>(response);
   }
 
-  async deleteDocument(documentId: string, userId: string): Promise<DeleteResponse> {
+  async deleteDocument(
+    documentId: string,
+    userId: string,
+  ): Promise<DeleteResponse> {
     const params = new URLSearchParams({ user_id: userId });
     const response = await fetch(
       `${this.baseUrl}/documents/${documentId}?${params}`,
-      { method: 'DELETE' }
+      { method: "DELETE" },
     );
     return this.handleResponse<DeleteResponse>(response);
   }
@@ -283,7 +297,7 @@ Then update the client initialization:
 
 ```typescript
 // src/api/documentClient.ts
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 export const apiClient = new DocumentApiClient(API_URL);
 ```
 
@@ -458,6 +472,7 @@ export default function DocumentManager({ userId }: { userId: string }) {
 ## CORS Configuration
 
 The backend has been configured to accept requests from:
+
 - `http://localhost:3000` (React default)
 - `http://localhost:5173` (Vite default)
 - `http://localhost:4200` (Angular default)
@@ -489,14 +504,17 @@ You should see the FastAPI interactive documentation.
 
 ```typescript
 // In your browser console or a test file
-import { apiClient } from './api/documentClient';
+import { apiClient } from "./api/documentClient";
 
 // Test creating a collection
-const collection = await apiClient.createCollection('user-123', 'Test Collection');
+const collection = await apiClient.createCollection(
+  "user-123",
+  "Test Collection",
+);
 console.log(collection);
 
 // Test listing collections
-const collections = await apiClient.listCollections('user-123');
+const collections = await apiClient.listCollections("user-123");
 console.log(collections);
 ```
 
@@ -505,17 +523,21 @@ console.log(collections);
 ## Common Issues
 
 ### CORS Errors
+
 **Error:** "Access to fetch... has been blocked by CORS policy"
 
 **Fix:** Make sure:
+
 1. Your frontend URL is in the `allow_origins` list in `main.py`
 2. Backend server is running
 3. You're using the correct API URL
 
 ### Connection Refused
+
 **Error:** "Failed to fetch" or "Connection refused"
 
 **Fix:** Backend is not running. Start it with:
+
 ```bash
 cd /Users/tafadzwabwakura/Desktop/search/fastapi-document-upload
 source venv/bin/activate
@@ -523,7 +545,9 @@ uvicorn main:app --reload --port 8000
 ```
 
 ### Authentication/User ID
+
 The API currently uses a simple `user_id` string parameter. In production, you should:
+
 1. Implement proper authentication (JWT, OAuth, etc.)
 2. Get `userId` from your auth system
 3. Pass it from your frontend to the API client
@@ -539,5 +563,6 @@ The API currently uses a simple `user_id` string parameter. In production, you s
 5. **Review DEPLOYMENT.md** when ready for production
 
 For more detailed examples and advanced usage, see:
+
 - `TYPESCRIPT_INTEGRATION.md` - Complete TypeScript integration guide
 - `DEPLOYMENT.md` - Production deployment guide

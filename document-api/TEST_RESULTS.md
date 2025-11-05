@@ -21,11 +21,11 @@
 
 Found **3 documents** in Vertex AI Search datastore:
 
-| # | Document ID | GCS URI | Type |
-|---|-------------|---------|------|
-| 1 | `13dc8b1c2f821d31fa1b6410d082f6cf` | `gs://.../8be724c89794_Building a StoryBrand...pdf` | Hash ID |
-| 2 | `21d12a9d57b818dfb9ef9ffd03f5e37b` | `gs://.../b52281ce8896_DeepSeek_OCR_paper.pdf` | Hash ID |
-| 3 | `ca76255236bf2362f3e467eef67dd0a4` | `gs://.../c0744c175a37_bitcoin.pdf` | Hash ID |
+| #   | Document ID                        | GCS URI                                             | Type    |
+| --- | ---------------------------------- | --------------------------------------------------- | ------- |
+| 1   | `13dc8b1c2f821d31fa1b6410d082f6cf` | `gs://.../8be724c89794_Building a StoryBrand...pdf` | Hash ID |
+| 2   | `21d12a9d57b818dfb9ef9ffd03f5e37b` | `gs://.../b52281ce8896_DeepSeek_OCR_paper.pdf`      | Hash ID |
+| 3   | `ca76255236bf2362f3e467eef67dd0a4` | `gs://.../c0744c175a37_bitcoin.pdf`                 | Hash ID |
 
 **Observation**: All documents have **32-character hash IDs** instead of blob names.
 
@@ -37,14 +37,15 @@ Found **3 documents** in Vertex AI Search datastore:
 
 Tested retrieving documents by different IDs:
 
-| Document ID | Result | Explanation |
-|-------------|--------|-------------|
-| `21d12a9d57b818dfb9ef9ffd03f5e37b` (hash) | ✅ FOUND | Actual Vertex AI ID works |
-| `ca7625236bf2362f3e467eef67dd0a4` (hash, typo) | ❌ NOT FOUND | Typo in test (missing 5) |
-| `c0744c175a37_bitcoin.pdf` (blob) | ❌ NOT FOUND | Blob name doesn't work |
-| `b52281ce8896_DeepSeek_OCR_paper.pdf` (blob) | ❌ NOT FOUND | Blob name doesn't work |
+| Document ID                                    | Result       | Explanation               |
+| ---------------------------------------------- | ------------ | ------------------------- |
+| `21d12a9d57b818dfb9ef9ffd03f5e37b` (hash)      | ✅ FOUND     | Actual Vertex AI ID works |
+| `ca7625236bf2362f3e467eef67dd0a4` (hash, typo) | ❌ NOT FOUND | Typo in test (missing 5)  |
+| `c0744c175a37_bitcoin.pdf` (blob)              | ❌ NOT FOUND | Blob name doesn't work    |
+| `b52281ce8896_DeepSeek_OCR_paper.pdf` (blob)   | ❌ NOT FOUND | Blob name doesn't work    |
 
 **Proof of ID Mismatch**:
+
 - Database stores: `c0744c175a37_bitcoin.pdf`
 - Vertex AI uses: `ca76255236bf2362f3e467eef67dd0a4`
 - **They don't match!** ❌
@@ -57,9 +58,9 @@ Tested retrieving documents by different IDs:
 
 Tested `verify_deletion()` method:
 
-| Blob Name | Result | Explanation |
-|-----------|--------|-------------|
-| `c0744c175a37_bitcoin.pdf` | ✅ "Deleted" | Not found = treated as deleted |
+| Blob Name                             | Result       | Explanation                    |
+| ------------------------------------- | ------------ | ------------------------------ |
+| `c0744c175a37_bitcoin.pdf`            | ✅ "Deleted" | Not found = treated as deleted |
 | `b52281ce8896_DeepSeek_OCR_paper.pdf` | ✅ "Deleted" | Not found = treated as deleted |
 
 **Note**: These return "successfully deleted" because they're **not found** (404), which the method interprets as "already deleted". But they're actually just **not indexed under those IDs**.
@@ -71,6 +72,7 @@ Tested `verify_deletion()` method:
 ### The Problem
 
 **What Happens During Upload** (OLD CODE):
+
 ```
 1. Upload to GCS
    → Blob name: "c0744c175a37_bitcoin.pdf"
@@ -83,6 +85,7 @@ Tested `verify_deletion()` method:
 ```
 
 **What Happens During Deletion** (FAILS):
+
 ```
 1. Read from database
    → vertex_ai_doc_id: "c0744c175a37_bitcoin.pdf"
@@ -102,6 +105,7 @@ Tested `verify_deletion()` method:
 The `import_documents_from_gcs()` method with `data_schema="content"` allows Vertex AI to auto-generate document IDs based on the content hash, not the file name.
 
 From Google's documentation:
+
 > "When importing documents without specifying a document ID, Vertex AI Search generates a unique identifier based on the document content."
 
 ---
@@ -110,31 +114,31 @@ From Google's documentation:
 
 ### Document 1: DeepSeek OCR Paper
 
-| System | ID/Path |
-|--------|---------|
-| **GCS Blob** | `b52281ce8896_DeepSeek_OCR_paper.pdf` |
+| System           | ID/Path                               |
+| ---------------- | ------------------------------------- |
+| **GCS Blob**     | `b52281ce8896_DeepSeek_OCR_paper.pdf` |
 | **Vertex AI ID** | `21d12a9d57b818dfb9ef9ffd03f5e37b` ❌ |
-| **PostgreSQL** | `b52281ce8896_DeepSeek_OCR_paper.pdf` |
+| **PostgreSQL**   | `b52281ce8896_DeepSeek_OCR_paper.pdf` |
 
 **Status**: Cannot delete using blob name ❌
 
 ### Document 2: Bitcoin Paper
 
-| System | ID/Path |
-|--------|---------|
-| **GCS Blob** | `c0744c175a37_bitcoin.pdf` |
+| System           | ID/Path                               |
+| ---------------- | ------------------------------------- |
+| **GCS Blob**     | `c0744c175a37_bitcoin.pdf`            |
 | **Vertex AI ID** | `ca76255236bf2362f3e467eef67dd0a4` ❌ |
-| **PostgreSQL** | `c0744c175a37_bitcoin.pdf` |
+| **PostgreSQL**   | `c0744c175a37_bitcoin.pdf`            |
 
 **Status**: Cannot delete using blob name ❌
 
 ### Document 3: StoryBrand Book
 
-| System | ID/Path |
-|--------|---------|
-| **GCS Blob** | `8be724c89794_Building a StoryBrand...pdf` |
-| **Vertex AI ID** | `13dc8b1c2f821d31fa1b6410d082f6cf` ❌ |
-| **PostgreSQL** | `8be724c89794_Building a StoryBrand...pdf` |
+| System           | ID/Path                                    |
+| ---------------- | ------------------------------------------ |
+| **GCS Blob**     | `8be724c89794_Building a StoryBrand...pdf` |
+| **Vertex AI ID** | `13dc8b1c2f821d31fa1b6410d082f6cf` ❌      |
+| **PostgreSQL**   | `8be724c89794_Building a StoryBrand...pdf` |
 
 **Status**: Cannot delete using blob name ❌
 
@@ -147,6 +151,7 @@ From Google's documentation:
 **File**: [vertex_ai_importer.py](vertex_ai_importer.py#L45-L116)
 
 **What it does**:
+
 ```python
 def create_document_with_id(document_id, gcs_uri, mime_type, metadata):
     # Creates document with EXPLICIT ID matching blob name
@@ -162,6 +167,7 @@ def create_document_with_id(document_id, gcs_uri, mime_type, metadata):
 ```
 
 **Result**:
+
 - Database: `c0744c175a37_bitcoin.pdf`
 - Vertex AI: `c0744c175a37_bitcoin.pdf` ✅
 - **IDs match!** Deletion will work!
@@ -177,6 +183,7 @@ def create_document_with_id(document_id, gcs_uri, mime_type, metadata):
 **Purpose**: Check if a document exists in Vertex AI
 
 **Returns**:
+
 ```python
 (exists: bool, document_data: dict | None)
 ```
@@ -190,6 +197,7 @@ def create_document_with_id(document_id, gcs_uri, mime_type, metadata):
 **Purpose**: Confirm a document has been deleted
 
 **Returns**:
+
 ```python
 (deleted: bool, message: str)
 ```
@@ -203,6 +211,7 @@ def create_document_with_id(document_id, gcs_uri, mime_type, metadata):
 **Purpose**: List all documents in the datastore
 
 **Returns**:
+
 ```python
 list[dict] with id, name, gcs_uri, metadata
 ```
@@ -216,12 +225,14 @@ list[dict] with id, name, gcs_uri, metadata
 ### 1. Clean Up Orphaned Documents
 
 Run the cleanup script:
+
 ```bash
 cd /Users/tafadzwabwakura/agent-chat-ui/document-api
 python3 cleanup_mismatched_vertex_ai_docs.py
 ```
 
 Expected result:
+
 - ✅ Deletes 3 documents with mismatched IDs
 - ✅ Clears Vertex AI datastore
 - ✅ Ready for new uploads
@@ -236,6 +247,7 @@ curl -X POST "http://localhost:8000/upload" \
 ```
 
 Expected result:
+
 - ✅ Document created with blob name as ID
 - ✅ IDs match between all systems
 - ✅ Can be deleted successfully
@@ -251,6 +263,7 @@ curl "http://localhost:8000/debug/verify-document/{blob_name}"
 ```
 
 Expected result:
+
 - ✅ Document deleted from Vertex AI
 - ✅ Verification confirms: `exists: false`
 - ✅ Not searchable anymore
@@ -261,13 +274,13 @@ Expected result:
 
 ### Test Coverage
 
-| Method | Tested | Status |
-|--------|--------|--------|
-| `list_documents()` | ✅ Yes | ✅ PASS |
-| `get_document()` | ✅ Yes | ✅ PASS |
-| `verify_deletion()` | ✅ Yes | ✅ PASS |
-| `create_document_with_id()` | ⏳ Pending | Needs upload test |
-| `delete_document()` | ⏳ Pending | Needs cleanup + new upload |
+| Method                      | Tested     | Status                     |
+| --------------------------- | ---------- | -------------------------- |
+| `list_documents()`          | ✅ Yes     | ✅ PASS                    |
+| `get_document()`            | ✅ Yes     | ✅ PASS                    |
+| `verify_deletion()`         | ✅ Yes     | ✅ PASS                    |
+| `create_document_with_id()` | ⏳ Pending | Needs upload test          |
+| `delete_document()`         | ⏳ Pending | Needs cleanup + new upload |
 
 ### Current State
 
@@ -320,6 +333,7 @@ Document 3:
 ### Screenshot Evidence
 
 Your screenshots showed:
+
 - Document in Vertex AI console with hash ID
 - Same document in database with blob name
 - **Confirmed ID mismatch!**

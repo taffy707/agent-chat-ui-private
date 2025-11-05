@@ -141,6 +141,7 @@ kill -9 <PID>
 ### Database connection issues?
 
 Make sure local PostgreSQL is running:
+
 ```bash
 pg_isready
 ```
@@ -148,6 +149,7 @@ pg_isready
 ### Google Cloud auth issues?
 
 Make sure you're authenticated:
+
 ```bash
 gcloud auth application-default login
 ```
@@ -155,6 +157,7 @@ gcloud auth application-default login
 ## 📝 Configuration
 
 The Docker setup uses:
+
 - `docker-compose.yml` - Container configuration
 - `.env.docker` - Environment variables (optional)
 - `Dockerfile` - Container image definition
@@ -163,13 +166,13 @@ The Docker setup uses:
 
 ## 🌟 Benefits Over Local Development
 
-| Feature | Docker | Local |
-|---------|--------|-------|
-| Setup time | ✅ 1 minute | ⏱️ 5-10 minutes |
-| Dependencies | ✅ Included | 📦 Manual install |
-| Python version | ✅ Guaranteed 3.11 | ❓ Varies |
-| Cleanup | ✅ One command | 🗑️ Manual |
-| Portability | ✅ Works everywhere | ❌ OS-dependent |
+| Feature        | Docker              | Local             |
+| -------------- | ------------------- | ----------------- |
+| Setup time     | ✅ 1 minute         | ⏱️ 5-10 minutes   |
+| Dependencies   | ✅ Included         | 📦 Manual install |
+| Python version | ✅ Guaranteed 3.11  | ❓ Varies         |
+| Cleanup        | ✅ One command      | 🗑️ Manual         |
+| Portability    | ✅ Works everywhere | ❌ OS-dependent   |
 
 ## 🎯 Next Steps
 

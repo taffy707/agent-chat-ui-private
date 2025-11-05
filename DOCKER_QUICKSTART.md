@@ -73,6 +73,7 @@ cd /Users/tafadzwabwakura/agent-chat-ui && pnpm dev
 ## Troubleshooting
 
 **Port 8000 already in use?**
+
 ```bash
 # Find and kill the process
 lsof -i :8000
@@ -82,6 +83,7 @@ kill -9 <PID>
 **Frontend not connecting to backend?**
 
 Check `.env` has:
+
 ```
 NEXT_PUBLIC_DOCUMENT_API_URL=http://localhost:8000
 ```
@@ -89,6 +91,7 @@ NEXT_PUBLIC_DOCUMENT_API_URL=http://localhost:8000
 **Docker not starting?**
 
 Make sure Docker Desktop is running, then:
+
 ```bash
 cd document-api
 docker-compose logs -f

@@ -427,6 +427,7 @@ Production (Service Account):
 ## Deployment Architecture
 
 ### Local Development
+
 ```
 ┌──────────────────────────────────────┐
 │ Your Computer                        │
@@ -455,6 +456,7 @@ Production (Service Account):
 ```
 
 ### Cloud Run Deployment
+
 ```
 ┌──────────────────────────────────────┐
 │ Internet                             │
@@ -497,6 +499,7 @@ Production (Service Account):
 ## Performance Characteristics
 
 ### Upload Performance
+
 ```
 File Size        Upload Time    Processing Time
 -------------------------------------------------
@@ -506,6 +509,7 @@ File Size        Upload Time    Processing Time
 ```
 
 ### Concurrent Uploads
+
 ```
 API can handle multiple concurrent uploads
 • Each file processed independently
@@ -514,6 +518,7 @@ API can handle multiple concurrent uploads
 ```
 
 ### Vertex AI Processing
+
 ```
 Background processing happens asynchronously
 • API returns immediately (202 Accepted)
@@ -527,6 +532,7 @@ Background processing happens asynchronously
 ## Scalability
 
 ### Vertical Scaling
+
 ```
 Single Instance Limits:
 • Concurrent requests: ~100
@@ -535,6 +541,7 @@ Single Instance Limits:
 ```
 
 ### Horizontal Scaling
+
 ```
 Cloud Run Auto-scaling:
 • Min instances: 0 (scale to zero)
@@ -544,6 +551,7 @@ Cloud Run Auto-scaling:
 ```
 
 ### Bottlenecks
+
 ```
 1. GCS upload bandwidth
    → Solution: Use regional buckets

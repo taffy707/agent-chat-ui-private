@@ -31,6 +31,7 @@ python main.py
 The API should start at: **http://localhost:8000**
 
 You should see:
+
 ```
 INFO:     Uvicorn running on http://0.0.0.0:8000
 ```
@@ -44,6 +45,7 @@ curl http://localhost:8000/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "healthy",
@@ -79,15 +81,18 @@ The UI should start at: **http://localhost:3000**
 2. **Start a chat**: Type any message to start a thread (or load an existing thread)
 
 3. **Open Document Manager**:
+
    - Look for the **document/file icon** in the top-right toolbar
    - Click it to open the Document Manager panel
 
 4. **Create a Collection**:
+
    - Click **"New Collection"** button
    - Enter a name like "Test Collection"
    - Click **"Create"**
 
 5. **Upload a Document**:
+
    - Make sure your collection is selected
    - Click the file input button
    - Select a PDF, DOCX, TXT, or HTML file
@@ -105,17 +110,21 @@ You now have a fully functional document management system integrated into your 
 ## Quick Troubleshooting
 
 **Q: Document Manager button doesn't appear**
+
 - A: Make sure you've started a chat thread first (send a message)
 
 **Q: "Failed to load collections" error**
+
 - A: Check that the Document API is running on port 8000
 - Run: `curl http://localhost:8000/health`
 
 **Q: Upload button is disabled**
+
 - A: Make sure you've selected a collection first
 - Then select files to upload
 
 **Q: Upload fails**
+
 - A: Check the file type (must be PDF, DOCX, TXT, or HTML)
 - Check file size (must be under 32MB)
 - Check the backend logs for errors

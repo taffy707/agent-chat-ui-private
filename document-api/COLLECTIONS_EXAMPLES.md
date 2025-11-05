@@ -5,6 +5,7 @@
 ### Example 1: Medical Researcher (Alice)
 
 #### Alice's Collections Setup
+
 ```
 Alice's Account
 ├─ 📁 Medical Research (45 documents)
@@ -29,6 +30,7 @@ Total: 3 collections, 76 documents
 #### Alice's Daily Workflow
 
 **Morning: Upload new research papers**
+
 ```bash
 # 1. Create collection (if first time)
 curl -X POST http://localhost:8000/collections \
@@ -63,6 +65,7 @@ curl -X POST http://localhost:8000/upload \
 ```
 
 **Afternoon: Review medical research documents only**
+
 ```bash
 # List only medical research documents
 curl "http://localhost:8000/collections/550e8400-e29b-41d4-a716-446655440001/documents?user_id=alice"
@@ -84,6 +87,7 @@ curl "http://localhost:8000/collections/550e8400-e29b-41d4-a716-446655440001/doc
 ```
 
 **Evening: Search across ALL documents**
+
 ```bash
 # View all documents across all collections
 curl "http://localhost:8000/documents?user_id=alice&limit=100"
@@ -113,6 +117,7 @@ curl "http://localhost:8000/documents?user_id=alice&limit=100"
 ```
 
 **End of Project: Delete entire collection**
+
 ```bash
 # Delete "Grant Applications" after grant is submitted
 curl -X DELETE "http://localhost:8000/collections/550e8400-e29b-41d4-a716-446655440002?user_id=alice"
@@ -137,6 +142,7 @@ curl -X DELETE "http://localhost:8000/collections/550e8400-e29b-41d4-a716-446655
 ### Example 2: Food Blogger (Bob)
 
 #### Bob's Collections Setup
+
 ```
 Bob's Account
 ├─ 📁 Italian Recipes (87 documents)
@@ -165,6 +171,7 @@ Total: 4 collections, 207 documents
 #### Bob's Blog Post Workflow
 
 **Step 1: View all collections**
+
 ```bash
 curl "http://localhost:8000/collections?user_id=bob"
 
@@ -203,6 +210,7 @@ curl "http://localhost:8000/collections?user_id=bob"
 ```
 
 **Step 2: Create new collection for upcoming series**
+
 ```bash
 curl -X POST http://localhost:8000/collections \
   -H "Content-Type: application/json" \
@@ -216,6 +224,7 @@ curl -X POST http://localhost:8000/collections \
 ```
 
 **Step 3: Upload recipes to specific collection**
+
 ```bash
 # Upload to "Mexican Cuisine" collection
 curl -X POST http://localhost:8000/upload \
@@ -227,6 +236,7 @@ curl -X POST http://localhost:8000/upload \
 ```
 
 **Step 4: Search specific collection for blog post**
+
 ```bash
 # Bob is writing about Italian desserts
 curl "http://localhost:8000/collections/collection-1/documents?user_id=bob&limit=100"
@@ -235,6 +245,7 @@ curl "http://localhost:8000/collections/collection-1/documents?user_id=bob&limit
 ```
 
 **Step 5: Delete old collection**
+
 ```bash
 # Bob stops doing restaurant reviews
 curl -X DELETE "http://localhost:8000/collections/collection-4?user_id=bob"
@@ -250,6 +261,7 @@ curl -X DELETE "http://localhost:8000/collections/collection-4?user_id=bob"
 ### Example 3: Project Manager (Charlie)
 
 #### Charlie's Collections Setup
+
 ```
 Charlie's Account
 ├─ 📁 Project Alpha - Q1 2025 (156 documents)
@@ -309,6 +321,7 @@ curl -X DELETE "http://localhost:8000/collections/project-alpha-id?user_id=charl
 ```
 
 **View Remaining Work**
+
 ```bash
 # Charlie now views all remaining documents
 curl "http://localhost:8000/documents?user_id=charlie"

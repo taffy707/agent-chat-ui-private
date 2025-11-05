@@ -62,6 +62,7 @@ ThreadProvider → StreamProvider → ArtifactProvider → Thread Component
 ### Key Concepts
 
 **State Type**: The application expects LangGraph servers to return state with this shape:
+
 ```typescript
 { messages: Message[]; ui?: UIMessage[] }
 ```
@@ -74,7 +75,7 @@ ThreadProvider → StreamProvider → ArtifactProvider → Thread Component
 
 ### API Passthrough
 
-For production deployments, the app includes an API passthrough ([api/[..._path]/route.ts](src/app/api/[..._path]/route.ts)) using `langgraph-nextjs-api-passthrough`. This proxies requests to your LangGraph server and injects the `LANGSMITH_API_KEY` server-side, preventing exposure of API keys to clients.
+For production deployments, the app includes an API passthrough ([api/[...\_path]/route.ts](src/app/api/[..._path]/route.ts)) using `langgraph-nextjs-api-passthrough`. This proxies requests to your LangGraph server and injects the `LANGSMITH_API_KEY` server-side, preventing exposure of API keys to clients.
 
 ### Component Structure
 
@@ -90,6 +91,7 @@ For production deployments, the app includes an API passthrough ([api/[..._path]
 ### State Management
 
 State is managed through React Context and URL query parameters (using `nuqs`):
+
 - `threadId`: Current conversation thread
 - `apiUrl`: LangGraph server endpoint
 - `assistantId`: Graph/assistant identifier

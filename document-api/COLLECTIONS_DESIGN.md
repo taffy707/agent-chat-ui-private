@@ -7,11 +7,13 @@ Collections allow users to organize their documents into named libraries (e.g., 
 ## User Stories
 
 1. **Alice** uploads medical research papers
+
    - Creates collection: "Medical Research"
    - Uploads 50 PDFs to this collection
    - Can view only medical documents when browsing this collection
 
 2. **Bob** is a food blogger
+
    - Creates collections: "Italian Recipes", "Asian Cuisine", "Baking"
    - Uploads recipes to appropriate collections
    - Can list all recipes in "Italian Recipes"
@@ -64,6 +66,7 @@ CREATE INDEX idx_documents_user_collection ON documents(user_id, collection_id);
 ### Collection Management
 
 #### 1. Create Collection
+
 ```http
 POST /collections
 Content-Type: application/json
@@ -86,6 +89,7 @@ Response:
 ```
 
 #### 2. List User's Collections
+
 ```http
 GET /collections?user_id=alice&limit=100&offset=0
 
@@ -112,6 +116,7 @@ Response:
 ```
 
 #### 3. Get Collection Details
+
 ```http
 GET /collections/{collection_id}?user_id=alice
 
@@ -128,6 +133,7 @@ Response:
 ```
 
 #### 4. Update Collection
+
 ```http
 PUT /collections/{collection_id}
 Content-Type: application/json
@@ -140,6 +146,7 @@ Content-Type: application/json
 ```
 
 #### 5. Delete Collection (CASCADE deletes all documents)
+
 ```http
 DELETE /collections/{collection_id}?user_id=alice
 
@@ -158,6 +165,7 @@ Response:
 ### Document Management (Updated)
 
 #### 6. Upload Documents (Now Requires collection_id)
+
 ```http
 POST /upload
 Content-Type: multipart/form-data
@@ -176,6 +184,7 @@ Response:
 ```
 
 #### 7. List Documents in Collection
+
 ```http
 GET /collections/{collection_id}/documents?user_id=alice&limit=100&offset=0
 
@@ -190,6 +199,7 @@ Response:
 ```
 
 #### 8. List ALL User's Documents (Across All Collections) ⭐ NEW
+
 ```http
 GET /documents?user_id=alice&limit=100&offset=0
 
@@ -217,6 +227,7 @@ Response:
 ```
 
 #### 9. Delete Document (Unchanged)
+
 ```http
 DELETE /documents/{doc_id}?user_id=alice
 ```
@@ -322,20 +333,24 @@ System performs:
 ## Data Integrity Rules
 
 ### 1. User Ownership
+
 - Users can only see/modify their own collections
 - Users can only see/modify documents in their collections
 
 ### 2. Collection Constraints
+
 - Collection names must be unique per user
 - Collection names required (cannot be empty)
 - Deleting a collection deletes all its documents (CASCADE)
 
 ### 3. Document Constraints
+
 - Documents MUST belong to a collection (collection_id NOT NULL)
 - Cannot upload documents without specifying collection_id
 - Orphaned documents not allowed
 
 ### 4. Deletion Order
+
 ```
 Delete Collection:
   ├─ For each document in collection:
@@ -352,6 +367,7 @@ Delete Collection:
 If you already have documents in the database without collection_id:
 
 **Option 1: Create Default Collection**
+
 ```sql
 -- For each user, create a "Default" collection
 INSERT INTO collections (user_id, name, description)
@@ -370,6 +386,7 @@ WHERE collection_id IS NULL;
 ```
 
 **Option 2: Require Manual Assignment**
+
 ```sql
 -- Keep collection_id nullable temporarily
 ALTER TABLE documents
@@ -485,11 +502,13 @@ LIMIT 100;
 ## Security Considerations
 
 1. **Authorization Checks**
+
    - Always verify user_id matches collection owner
    - Always verify user_id matches document owner
    - Never expose other users' collections/documents
 
 2. **Validation**
+
    - Collection names: Max 255 chars, no SQL injection
    - Verify collection exists before upload
    - Verify user owns collection before operations
@@ -511,16 +530,16 @@ LIMIT 100;
 
 ### API Summary
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/collections` | POST | Create collection |
-| `/collections` | GET | List user's collections |
-| `/collections/{id}` | GET | Get collection details |
-| `/collections/{id}` | PUT | Update collection |
-| `/collections/{id}` | DELETE | Delete collection + all docs |
-| `/collections/{id}/documents` | GET | List docs in collection |
-| `/upload` | POST | Upload docs to collection |
-| `/documents` | GET | List ALL user's documents |
-| `/documents/{id}` | DELETE | Delete single document |
+| Endpoint                      | Method | Purpose                      |
+| ----------------------------- | ------ | ---------------------------- |
+| `/collections`                | POST   | Create collection            |
+| `/collections`                | GET    | List user's collections      |
+| `/collections/{id}`           | GET    | Get collection details       |
+| `/collections/{id}`           | PUT    | Update collection            |
+| `/collections/{id}`           | DELETE | Delete collection + all docs |
+| `/collections/{id}/documents` | GET    | List docs in collection      |
+| `/upload`                     | POST   | Upload docs to collection    |
+| `/documents`                  | GET    | List ALL user's documents    |
+| `/documents/{id}`             | DELETE | Delete single document       |
 
 This design provides a clean, scalable way to organize documents with proper data integrity and security!

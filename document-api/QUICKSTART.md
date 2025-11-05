@@ -41,6 +41,7 @@ gcloud auth application-default login
 ### Step 2: Create Vertex AI Search Datastore
 
 **Option A: Via Console (Easier)**
+
 1. Go to https://console.cloud.google.com/gen-app-builder/data-stores
 2. Click "Create Data Store"
 3. Select "Unstructured documents"
@@ -50,6 +51,7 @@ gcloud auth application-default login
 7. Copy the datastore ID from the URL
 
 **Option B: Via gcloud**
+
 ```bash
 gcloud alpha discovery-engine data-stores create metatask-datastore \
   --location=global \
@@ -78,6 +80,7 @@ nano .env
 ```
 
 **Edit these values in `.env`:**
+
 ```env
 GCP_PROJECT_ID=metatask-461115
 VERTEX_AI_DATA_STORE_ID=metatask_1761751621392  # Your actual datastore ID
@@ -108,6 +111,7 @@ curl http://localhost:8000/health
 ```
 
 **Expected output:**
+
 ```json
 {
   "status": "healthy",
@@ -120,22 +124,26 @@ curl http://localhost:8000/health
 ### Test 2: Upload a Document
 
 **Create a test file:**
+
 ```bash
 echo "This is a test document for Vertex AI Search indexing." > test.txt
 ```
 
 **Upload it:**
+
 ```bash
 curl -X POST "http://localhost:8000/upload" \
   -F "files=@test.txt"
 ```
 
 **Or use the test script:**
+
 ```bash
 python test_upload.py test.txt
 ```
 
 **Expected output:**
+
 ```json
 {
   "status": "accepted",
@@ -181,18 +189,18 @@ with open("document.pdf", "rb") as f:
 ### JavaScript/Node.js
 
 ```javascript
-const FormData = require('form-data');
-const fs = require('fs');
+const FormData = require("form-data");
+const fs = require("fs");
 
 const form = new FormData();
-form.append('files', fs.createReadStream('document.pdf'));
+form.append("files", fs.createReadStream("document.pdf"));
 
-fetch('http://localhost:8000/upload', {
-  method: 'POST',
-  body: form
+fetch("http://localhost:8000/upload", {
+  method: "POST",
+  body: form,
 })
-  .then(res => res.json())
-  .then(data => console.log(data));
+  .then((res) => res.json())
+  .then((data) => console.log(data));
 ```
 
 ### cURL (Multiple Files)
@@ -225,6 +233,7 @@ After successful upload, Vertex AI Search processes documents in the background:
 - **DOCX files:** 5-20 minutes
 
 **Check progress:**
+
 1. Console: https://console.cloud.google.com/gen-app-builder/data-stores
 2. Click your datastore → "Activity" tab
 3. Or use the API: `/operation/{operation_name}`
@@ -234,6 +243,7 @@ After successful upload, Vertex AI Search processes documents in the background:
 ## 🔍 Verify Documents Are Indexed
 
 ### Option 1: Console
+
 1. Go to https://console.cloud.google.com/gen-app-builder/data-stores
 2. Click your datastore
 3. Go to "Data" tab
@@ -242,6 +252,7 @@ After successful upload, Vertex AI Search processes documents in the background:
 ### Option 2: Search (After Processing)
 
 The documents from this repo show how to query, or use the console:
+
 1. Go to your datastore
 2. Click "Preview" tab
 3. Try searching for content from your document
@@ -253,6 +264,7 @@ The documents from this repo show how to query, or use the console:
 ### Issue: "Permission denied"
 
 **Fix:**
+
 ```bash
 # Re-authenticate
 gcloud auth application-default login
@@ -261,6 +273,7 @@ gcloud auth application-default login
 ### Issue: "Bucket not found"
 
 **Fix:**
+
 ```bash
 # Create bucket
 gsutil mb gs://YOUR_BUCKET_NAME
@@ -270,6 +283,7 @@ gsutil mb gs://YOUR_BUCKET_NAME
 
 **Fix:**
 Check your datastore ID:
+
 ```bash
 gcloud alpha discovery-engine data-stores list --location=global
 ```
@@ -277,6 +291,7 @@ gcloud alpha discovery-engine data-stores list --location=global
 ### Issue: "Module not found" errors
 
 **Fix:**
+
 ```bash
 # Activate venv and reinstall
 source venv/bin/activate
@@ -286,6 +301,7 @@ pip install -r requirements.txt --upgrade
 ### Issue: Port 8000 already in use
 
 **Fix:**
+
 ```bash
 # Use different port
 uvicorn main:app --host 0.0.0.0 --port 8001
@@ -298,14 +314,17 @@ uvicorn main:app --host 0.0.0.0 --port 8001
 Once everything is working:
 
 1. **Deploy to Production**
+
    - See README.md → Deployment section
    - Use Cloud Run for serverless deployment
 
 2. **Add Authentication**
+
    - Integrate with Firebase Auth
    - Use API keys or OAuth
 
 3. **Add Features**
+
    - Document metadata support
    - Webhook notifications on completion
    - Batch upload UI

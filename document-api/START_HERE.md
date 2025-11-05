@@ -68,12 +68,14 @@ python main.py
 ## 📦 What You Got
 
 ### Core Application (750 lines of Python)
+
 - ✅ **[main.py](main.py)** - FastAPI server with upload endpoint
 - ✅ **[gcs_uploader.py](gcs_uploader.py)** - Google Cloud Storage integration
 - ✅ **[vertex_ai_importer.py](vertex_ai_importer.py)** - Vertex AI Search integration
 - ✅ **[config.py](config.py)** - Configuration management
 
 ### Documentation (25,000+ words)
+
 - ✅ **[README.md](README.md)** - Complete guide (15K words)
 - ✅ **[QUICKSTART.md](QUICKSTART.md)** - 5-minute setup
 - ✅ **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design
@@ -81,6 +83,7 @@ python main.py
 - ✅ **[INDEX.md](INDEX.md)** - Documentation index
 
 ### Utilities & Configuration
+
 - ✅ **[setup.sh](setup.sh)** - Automated setup script
 - ✅ **[test_upload.py](test_upload.py)** - Testing utility
 - ✅ **[Dockerfile](Dockerfile)** - Container definition
@@ -154,26 +157,34 @@ Just add your **GCS_BUCKET_NAME** in `.env` and you're ready!
 ## 🎯 API Endpoints You Can Use
 
 ### `GET /health`
+
 Check if service is running
+
 ```bash
 curl http://localhost:8000/health
 ```
 
 ### `POST /upload`
+
 Upload documents (single or multiple)
+
 ```bash
 curl -X POST "http://localhost:8000/upload" \
   -F "files=@document.pdf"
 ```
 
 ### `GET /operation/{name}`
+
 Check import status
+
 ```bash
 curl http://localhost:8000/operation/projects/.../operations/...
 ```
 
 ### `GET /docs`
+
 Interactive API documentation (Swagger UI)
+
 ```
 http://localhost:8000/docs
 ```
@@ -207,6 +218,7 @@ http://localhost:8000/docs
 ```
 
 **Check progress:**
+
 - GCP Console → Vertex AI Search → Activity tab
 - Or use: `GET /operation/{operation_name}`
 
@@ -232,6 +244,7 @@ Missing something? → [QUICKSTART.md](QUICKSTART.md) has step-by-step instructi
 ## 💡 Pro Tips
 
 ### Development
+
 ```bash
 # Auto-reload on code changes
 uvicorn main:app --reload
@@ -243,6 +256,7 @@ python test_upload.py document.pdf
 ```
 
 ### Production
+
 ```bash
 # Deploy to Cloud Run (serverless)
 gcloud run deploy vertex-ai-upload --source .
@@ -253,6 +267,7 @@ docker run -p 8080:8080 --env-file .env vertex-ai-upload
 ```
 
 ### Testing
+
 ```bash
 # Health check
 curl http://localhost:8000/health
@@ -271,16 +286,19 @@ open http://localhost:8000/docs
 ## 🎓 Learning Resources
 
 ### Understand the Code
+
 1. Start with [main.py](main.py) - The FastAPI app
 2. Review [gcs_uploader.py](gcs_uploader.py) - How files are uploaded
 3. Review [vertex_ai_importer.py](vertex_ai_importer.py) - How imports work
 4. Check [config.py](config.py) - How configuration works
 
 ### Understand the System
+
 1. Read [ARCHITECTURE.md](ARCHITECTURE.md) - Visual diagrams
 2. Read [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - What was built
 
 ### Deploy to Production
+
 1. Read [README.md](README.md) → Deployment section
 2. Choose: Cloud Run (recommended) or Compute Engine
 3. Configure: Production settings
@@ -318,22 +336,26 @@ A: Use Vertex AI Search API or Console. See repository for query examples.
 ### Quick Fixes
 
 **Port 8000 already in use:**
+
 ```bash
 uvicorn main:app --port 8001
 ```
 
 **Permission denied:**
+
 ```bash
 gcloud auth application-default login
 ```
 
 **Module not found:**
+
 ```bash
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
 **Bucket not found:**
+
 ```bash
 gsutil mb gs://YOUR_BUCKET_NAME
 ```
@@ -347,18 +369,21 @@ For more: [QUICKSTART.md](QUICKSTART.md) → Common Issues
 Everything is set up and ready to use. Here's what to do next:
 
 ### Right Now (5 minutes)
+
 1. Run `./setup.sh`
 2. Edit `.env`
 3. Run `python main.py`
 4. Upload a test file
 
 ### Today (30 minutes)
+
 1. Upload some real documents
 2. Monitor processing in GCP Console
 3. Test searching your documents
 4. Read the documentation
 
 ### This Week
+
 1. Deploy to Cloud Run
 2. Add custom features
 3. Set up monitoring
@@ -393,6 +418,7 @@ Everything is set up and ready to use. Here's what to do next:
 ### Choose your path:
 
 **🏃 Fast Track (Experienced)**
+
 ```bash
 ./setup.sh && nano .env && python main.py
 ```

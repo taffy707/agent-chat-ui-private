@@ -51,13 +51,13 @@ User Deletes Document
 
 Based on Google's documentation and real-world testing:
 
-| Document Type | Typical Indexing Time | Factors |
-|--------------|----------------------|---------|
-| **Small text files** (< 1 MB) | 2-3 minutes | Fast processing |
-| **PDFs** (1-10 MB) | 3-7 minutes | Text extraction required |
-| **Large documents** (10-30 MB) | 5-10 minutes | More chunks, embeddings |
-| **Complex documents** | 10-15 minutes | Tables, images, OCR |
-| **High system load** | 15-30 minutes | Queue processing delay |
+| Document Type                  | Typical Indexing Time | Factors                  |
+| ------------------------------ | --------------------- | ------------------------ |
+| **Small text files** (< 1 MB)  | 2-3 minutes           | Fast processing          |
+| **PDFs** (1-10 MB)             | 3-7 minutes           | Text extraction required |
+| **Large documents** (10-30 MB) | 5-10 minutes          | More chunks, embeddings  |
+| **Complex documents**          | 10-15 minutes         | Tables, images, OCR      |
+| **High system load**           | 15-30 minutes         | Queue processing delay   |
 
 ### Our Retry Strategy Aligns With This
 
@@ -71,6 +71,7 @@ Based on Google's documentation and real-world testing:
 ```
 
 **Key Points:**
+
 1. ✅ **First retry at 2 minutes** - Catches fast indexing cases
 2. ✅ **Second retry at 5 minutes** - Peak success rate (typical indexing time)
 3. ✅ **Third retry at 10 minutes** - Catches slower documents
@@ -79,6 +80,7 @@ Based on Google's documentation and real-world testing:
 ## Comparison: Old vs New Schedule
 
 ### OLD SCHEDULE (Not Optimized)
+
 ```
 T+0s:   Try delete → 404
 T+30s:  Retry #1 → 404 (wasteful, too early)
@@ -88,11 +90,13 @@ T+7.5m: Retry #4 → Maybe success? (50% chance)
 ```
 
 **Problems:**
+
 - ❌ First 2-3 retries always fail (wasted API calls)
 - ❌ Hits Vertex AI API repeatedly during indexing
 - ❌ Doesn't align with known indexing time
 
 ### NEW SCHEDULE (Optimized)
+
 ```
 T+0s:   Try delete → 404
 T+2m:   Retry #1 → 404 (10% success - early finishers)
@@ -102,6 +106,7 @@ T+20m:  Retry #4 → ✅ (99% success - edge cases)
 ```
 
 **Benefits:**
+
 - ✅ Aligns with Vertex AI indexing time (2-10 minutes)
 - ✅ Most deletions succeed on retry #2 or #3
 - ✅ Reduces wasted API calls
@@ -166,21 +171,25 @@ DELETION_QUEUE_INITIAL_DELAY = 120  # 2 minutes
 ### Tuning Recommendations
 
 **If you have mostly small text files (< 1 MB):**
+
 ```python
 DELETION_QUEUE_INITIAL_DELAY = 90  # 1.5 minutes
 ```
 
 **If you have large PDFs (> 10 MB):**
+
 ```python
 DELETION_QUEUE_INITIAL_DELAY = 180  # 3 minutes
 ```
 
 **If you want faster queue processing:**
+
 ```python
 DELETION_QUEUE_WORKER_INTERVAL = 30  # Check every 30 seconds
 ```
 
 **For high-volume systems:**
+
 ```python
 DELETION_QUEUE_WORKER_INTERVAL = 120  # Check every 2 minutes
 DELETION_QUEUE_MAX_ATTEMPTS = 15  # More retries for safety

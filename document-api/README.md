@@ -73,6 +73,7 @@ gcloud alpha discovery-engine data-stores create YOUR_DATASTORE_ID \
 Or create via [Cloud Console](https://console.cloud.google.com/gen-app-builder/data-stores).
 
 **Get your datastore ID:**
+
 - Go to [Vertex AI Search Console](https://console.cloud.google.com/gen-app-builder/data-stores)
 - Click on your datastore
 - Copy the datastore ID from the URL or details page
@@ -92,11 +93,13 @@ gsutil mb -p YOUR_PROJECT_ID gs://YOUR_BUCKET_NAME
 ### 4. Authentication
 
 **Option A: Using gcloud (for local development)**
+
 ```bash
 gcloud auth application-default login
 ```
 
 **Option B: Using Service Account (for production)**
+
 ```bash
 # 1. Create service account
 gcloud iam service-accounts create vertex-ai-upload \
@@ -192,6 +195,7 @@ curl http://localhost:8000/health
 ```
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
@@ -210,6 +214,7 @@ curl http://localhost:8000/health
 Upload one or more documents for indexing in Vertex AI Search.
 
 **Request:**
+
 ```bash
 # Single file
 curl -X POST "http://localhost:8000/upload" \
@@ -225,6 +230,7 @@ curl -X POST "http://localhost:8000/upload" \
 ```
 
 **Success Response (202 Accepted):**
+
 ```json
 {
   "status": "accepted",
@@ -254,6 +260,7 @@ curl -X POST "http://localhost:8000/upload" \
 ```
 
 **Error Response (400 Bad Request):**
+
 ```json
 {
   "detail": {
@@ -281,6 +288,7 @@ curl "http://localhost:8000/operation/projects/123456/locations/global/collectio
 ```
 
 **Response:**
+
 ```json
 {
   "done": true,
@@ -329,22 +337,23 @@ fastapi-document-upload/
 
 All configuration is done via environment variables in `.env`:
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `GCP_PROJECT_ID` | ✅ Yes | - | Your Google Cloud project ID |
-| `VERTEX_AI_DATA_STORE_ID` | ✅ Yes | - | Your Vertex AI Search datastore ID |
-| `VERTEX_AI_LOCATION` | No | `global` | Datastore location (global/us/eu) |
-| `GCS_BUCKET_NAME` | ✅ Yes | - | GCS bucket for document storage |
-| `MAX_FILE_SIZE` | No | `33554432` | Max file size in bytes (32MB) |
-| `ALLOWED_EXTENSIONS` | No | `[".pdf", ".docx", ".txt", ".html", ".htm"]` | Allowed file extensions |
-| `API_TITLE` | No | Auto | API title for docs |
-| `API_VERSION` | No | `1.0.0` | API version |
+| Variable                  | Required | Default                                      | Description                        |
+| ------------------------- | -------- | -------------------------------------------- | ---------------------------------- |
+| `GCP_PROJECT_ID`          | ✅ Yes   | -                                            | Your Google Cloud project ID       |
+| `VERTEX_AI_DATA_STORE_ID` | ✅ Yes   | -                                            | Your Vertex AI Search datastore ID |
+| `VERTEX_AI_LOCATION`      | No       | `global`                                     | Datastore location (global/us/eu)  |
+| `GCS_BUCKET_NAME`         | ✅ Yes   | -                                            | GCS bucket for document storage    |
+| `MAX_FILE_SIZE`           | No       | `33554432`                                   | Max file size in bytes (32MB)      |
+| `ALLOWED_EXTENSIONS`      | No       | `[".pdf", ".docx", ".txt", ".html", ".htm"]` | Allowed file extensions            |
+| `API_TITLE`               | No       | Auto                                         | API title for docs                 |
+| `API_VERSION`             | No       | `1.0.0`                                      | API version                        |
 
 ## 🐛 Troubleshooting
 
 ### Issue: "Permission denied" errors
 
 **Solution:** Ensure your service account or user has these roles:
+
 - `roles/discoveryengine.editor` - For Vertex AI Search
 - `roles/storage.objectAdmin` - For Cloud Storage
 
@@ -358,6 +367,7 @@ gcloud projects get-iam-policy YOUR_PROJECT_ID \
 ### Issue: "Bucket does not exist"
 
 **Solution:** Create the bucket manually:
+
 ```bash
 gsutil mb -p YOUR_PROJECT_ID gs://YOUR_BUCKET_NAME
 ```
@@ -365,6 +375,7 @@ gsutil mb -p YOUR_PROJECT_ID gs://YOUR_BUCKET_NAME
 ### Issue: "Datastore not found"
 
 **Solution:** Verify your datastore ID:
+
 ```bash
 gcloud alpha discovery-engine data-stores list --location=global
 ```
@@ -374,6 +385,7 @@ gcloud alpha discovery-engine data-stores list --location=global
 **Cause:** Document processing takes time (a few minutes to hours depending on size).
 
 **Solution:**
+
 1. Check operation status via API: `/operation/{operation_name}`
 2. View activity in [Cloud Console](https://console.cloud.google.com/gen-app-builder/data-stores)
 3. Large PDFs may take 10-30 minutes to process
@@ -381,6 +393,7 @@ gcloud alpha discovery-engine data-stores list --location=global
 ### Issue: "Invalid file type" errors
 
 **Solution:** Only these types are supported:
+
 - PDF: `.pdf`
 - Word: `.docx` (not `.doc`)
 - Text: `.txt`
@@ -389,6 +402,7 @@ gcloud alpha discovery-engine data-stores list --location=global
 ### Issue: Module import errors
 
 **Solution:**
+
 ```bash
 # Reinstall dependencies
 pip install -r requirements.txt --upgrade
@@ -474,6 +488,7 @@ sudo nano /etc/systemd/system/vertex-ai-upload.service
 ```
 
 Service file content:
+
 ```ini
 [Unit]
 Description=Vertex AI Document Upload API
@@ -506,6 +521,7 @@ sudo systemctl start vertex-ai-upload
 ## 🤝 Support
 
 For issues or questions:
+
 1. Check the [Troubleshooting](#-troubleshooting) section
 2. Review [Vertex AI Search documentation](https://cloud.google.com/generative-ai-app-builder/docs)
 3. Check application logs for detailed error messages
@@ -517,6 +533,7 @@ Copyright 2024 - Based on Google Cloud Vertex AI Search examples
 ## 🙏 Acknowledgments
 
 This implementation is based on patterns from the [Google Cloud Generative AI repository](https://github.com/GoogleCloudPlatform/generative-ai), specifically:
+
 - `create_datastore_and_search.ipynb` - Document import patterns
 - `vais-building-blocks/ingesting_unstructured_documents_with_metadata.ipynb` - GCS upload workflow
 - `cloud-function/python/` - API structure and error handling

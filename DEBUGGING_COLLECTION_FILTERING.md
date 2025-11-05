@@ -5,16 +5,19 @@
 I've added console logging to help debug the collection filtering. Follow these steps:
 
 ### 1. Start the Frontend
+
 ```bash
 pnpm dev
 ```
 
 ### 2. Open Browser Console
+
 - Open your browser's Developer Tools (F12)
 - Go to the Console tab
 - Keep it open while testing
 
 ### 3. Test Scenario 1: No Collections Selected
+
 1. **Don't select any collections** (leave dropdown empty)
 2. Type a test question: "What documents do I have?"
 3. Press Send
@@ -26,6 +29,7 @@ pnpm dev
 5. **Expected behavior**: Should search ALL your collections
 
 ### 4. Test Scenario 2: One Collection Selected
+
 1. Click the "Select Knowledge Base" dropdown
 2. Select ONE collection (e.g., "research")
 3. Type a test question about content you KNOW is in that collection
@@ -38,6 +42,7 @@ pnpm dev
 6. **Expected behavior**: Should ONLY return results from that collection
 
 ### 5. Test Scenario 3: Multiple Collections Selected
+
 1. Select 2-3 collections from the dropdown
 2. Ask a question
 3. Press Send
@@ -55,16 +60,19 @@ pnpm dev
 ### Frontend Issues
 
 **Problem**: Console shows `collection_ids: []` even when collections are selected
+
 - **Cause**: Selection not working in UI
 - **Check**: Click the collection items - do they show checkmarks?
 
 **Problem**: Console doesn't show any logs
+
 - **Cause**: Frontend not running or console not open
 - **Fix**: Restart frontend with `pnpm dev`
 
 ### Backend Issues
 
 **Problem**: Frontend sends correct IDs but results aren't filtered
+
 - **Cause**: LangGraph isn't applying the filter
 - **Next step**: Check LangGraph logs
 
@@ -73,6 +81,7 @@ pnpm dev
 ## Checking LangGraph Logs
 
 ### 1. Find your LangGraph container/process
+
 ```bash
 # If using Docker
 docker ps | grep langgraph
@@ -83,12 +92,15 @@ docker logs <container-id>
 ```
 
 ### 2. Look for filter-related logs
+
 The LangGraph server should log the filter expression being used. Look for something like:
+
 ```
 Filter: user_id: ANY("default-user") AND (collection_id: ANY("id1") OR collection_id: ANY("id2"))
 ```
 
 ### 3. If you DON'T see filter logs
+
 The collection filtering code might not be implemented yet or was removed.
 
 ---
@@ -101,16 +113,19 @@ The collection filtering code might not be implemented yet or was removed.
 2. **Create Collection B**: Upload a document about "JavaScript programming"
 
 ### Test 1: Search with Collection A selected only
+
 - Ask: "Tell me about programming languages"
 - **Expected**: Only mentions Python (from Collection A)
 - **If it mentions JavaScript**: Filter is NOT working
 
 ### Test 2: Search with Collection B selected only
+
 - Ask: "Tell me about programming languages"
 - **Expected**: Only mentions JavaScript (from Collection B)
 - **If it mentions Python**: Filter is NOT working
 
 ### Test 3: Search with both collections selected
+
 - Ask: "Tell me about programming languages"
 - **Expected**: Mentions both Python and JavaScript
 - This should work either way
@@ -120,27 +135,37 @@ The collection filtering code might not be implemented yet or was removed.
 ## Common Reasons Filtering Doesn't Work
 
 ### 1. LangGraph Code Not Implemented
+
 **Check**: Is the collection filtering code in `retrieval.py`?
+
 - If the other AI assistant reverted or didn't apply the changes
 - Solution: Share the `LANGGRAPH_COLLECTION_FILTERING_CHANGES.md` guide
 
 ### 2. Environment Variable Conflict
+
 **Check**: `VERTEX_AI_DISABLE_USER_FILTER=true`
+
 - If filter code checks user_id but this is disabled, logic might break
 - Solution: Update filter code to handle this flag correctly
 
 ### 3. Metadata Missing in Vertex AI Search
+
 **Check**: Do your documents have `collection_id` metadata?
+
 - If documents weren't indexed with collection_id, filter won't work
 - Solution: Re-upload documents with proper metadata
 
 ### 4. Field Name Mismatch
+
 **Check**: Frontend sends `collection_ids`, backend expects `collection_id`
+
 - Or backend uses `collectionId` instead of `collection_id`
 - Solution: Ensure field names match exactly
 
 ### 5. Filter Syntax Error
+
 **Check**: Vertex AI Search filter syntax is correct
+
 - Correct: `collection_id: ANY("abc-123")`
 - Wrong: `collection_id == "abc-123"`
 - Wrong: `collection_id: "abc-123"`
@@ -168,6 +193,7 @@ Run through this checklist and note which ones PASS ✅ or FAIL ❌:
 ## Next Steps Based on Results
 
 ### If Frontend Logs Look Good
+
 ✅ Console shows correct collection IDs
 ✅ IDs are sent on submit
 ❌ But results aren't filtered
@@ -178,6 +204,7 @@ Run through this checklist and note which ones PASS ✅ or FAIL ❌:
 → Share the implementation guide with the other AI
 
 ### If Frontend Logs Are Wrong
+
 ❌ Console shows empty array when collections selected
 ❌ No logs appear
 
@@ -186,6 +213,7 @@ Run through this checklist and note which ones PASS ✅ or FAIL ❌:
 → Verify state is being updated
 
 ### If Everything Looks Good But Still Not Working
+
 ✅ Frontend sends correct IDs
 ✅ LangGraph receives them
 ✅ Filter is being applied
@@ -218,6 +246,7 @@ When asking the other AI to fix the LangGraph server, share:
 Once the LangGraph code is updated:
 
 1. **Rebuild LangGraph container**:
+
    ```bash
    cd /path/to/langgraph
    docker build -t retrieval-agent .

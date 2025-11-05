@@ -26,6 +26,7 @@ This was true when using bulk import, which let Vertex AI generate its own IDs.
 ## Solution: ID Sanitization Enables Direct Deletion
 
 After implementing the ID sanitization fix (commit `0f19434`), we now:
+
 1. **Create** documents with predictable, sanitized IDs
 2. **Store** those exact IDs in PostgreSQL's `vertex_ai_doc_id` column
 3. **Know** the exact Vertex AI document ID without searching
@@ -33,6 +34,7 @@ After implementing the ID sanitization fix (commit `0f19434`), we now:
 ### Example from Vertex AI Console
 
 Looking at the Vertex AI Search console, document IDs are now:
+
 - `0824854ce446_1_s2_0_S1470160X21011821_main`
 - `6062b2e84b6e_070007_1_5_0184740`
 - `7bc918501d98_179131`
@@ -58,6 +60,7 @@ That's it! One API call instead of three.
 ### 1. Updated main.py - Document Deletion Endpoint
 
 **Before:**
+
 ```python
 # Step 3: Delete from Vertex AI Search using URI (works around ID mismatch)
 vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document_by_uri(
@@ -66,6 +69,7 @@ vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document_by_uri(
 ```
 
 **After:**
+
 ```python
 # Step 3: Delete from Vertex AI Search using known document ID
 # Now that we sanitize and control document IDs, we can delete directly
@@ -77,6 +81,7 @@ vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document(
 ### 2. Updated main.py - Collection Deletion Endpoint
 
 **Before:**
+
 ```python
 # Delete from Vertex AI using URI (reliable method)
 vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document_by_uri(
@@ -85,6 +90,7 @@ vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document_by_uri(
 ```
 
 **After:**
+
 ```python
 # Delete from Vertex AI using known document ID (simplified)
 vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document(
@@ -95,6 +101,7 @@ vertex_ai_success, vertex_ai_msg = vertex_ai_importer.delete_document(
 ### 3. Updated vertex_ai_importer.py - Docstrings
 
 **delete_document_by_uri():**
+
 ```python
 """
 DEPRECATED: This method is complex and slow (lists all documents to find match).
@@ -105,6 +112,7 @@ Only use this for legacy documents uploaded before ID sanitization fix.
 ```
 
 **delete_document():**
+
 ```python
 """
 This is the PREFERRED method now that we use sanitized document IDs.
@@ -115,6 +123,7 @@ Much faster and simpler than delete_document_by_uri().
 ## Performance Improvement
 
 ### Before (URI-based)
+
 1. **List all documents**: ~1.5 seconds (especially slow with many documents)
 2. **Search for match**: ~0.3 seconds
 3. **Delete**: ~0.5 seconds
@@ -123,6 +132,7 @@ Much faster and simpler than delete_document_by_uri().
 With 10 documents in a collection: **~23 seconds**
 
 ### After (Direct ID)
+
 1. **Delete**: ~0.5 seconds
 2. **Total**: ~0.5 seconds per document
 
@@ -133,11 +143,13 @@ With 10 documents in a collection: **~5 seconds**
 ## Scalability Improvement
 
 ### Before
+
 - Limited to 1000 documents per page
 - Performance degrades linearly with document count
 - Multiple API calls (list + delete for each document)
 
 ### After
+
 - No document count limits
 - Constant-time performance regardless of document count
 - Single API call per document
@@ -145,11 +157,13 @@ With 10 documents in a collection: **~5 seconds**
 ## Reliability Improvement
 
 ### Before
+
 - Could fail if URI didn't match exactly
 - Dependent on list_documents pagination
 - Race conditions if documents are being added/deleted concurrently
 
 ### After
+
 - Direct ID lookup (no ambiguity)
 - No pagination issues
 - Atomic delete operation
@@ -169,6 +183,7 @@ The `delete_document_by_uri()` method is still available for legacy documents bu
 ## Testing Deletion
 
 ### Test with UI
+
 1. Upload a document to any collection
 2. Wait for "Ready" badge (indexed status)
 3. Click delete button
@@ -177,6 +192,7 @@ The `delete_document_by_uri()` method is still available for legacy documents bu
 ### Expected Logs
 
 **Before (Complex):**
+
 ```
 Searching for document with URI: gs://bucket/file.pdf
 Listed 1000 documents from Vertex AI Search
@@ -185,6 +201,7 @@ Found document - URI: gs://bucket/file.pdf, Vertex AI ID: abc123_file
 ```
 
 **After (Simple):**
+
 ```
 Attempting to delete document with path: projects/.../documents/abc123_file
 ✅ Deleted from Vertex AI: abc123_file
@@ -215,6 +232,7 @@ The simplified implementation works for all new documents uploaded after the ID 
 ---
 
 **Related Commits:**
+
 - `0f19434` - Document ID sanitization fix (enables this simplification)
 - `1a6c4cc` - Deletion simplification (this change)
 

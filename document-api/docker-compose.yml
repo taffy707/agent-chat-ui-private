@@ -23,7 +23,7 @@ services:
       # Mount your credentials file and uncomment this:
       # GOOGLE_APPLICATION_CREDENTIALS: /app/credentials/key.json
     ports:
-      - "8000:8080"  # Map host port 8000 to container port 8080
+      - "8000:8080" # Map host port 8000 to container port 8080
     volumes:
       # Mount Google Cloud credentials from host machine
       - ~/.config/gcloud:/root/.config/gcloud:ro

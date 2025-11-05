@@ -86,6 +86,7 @@ async def upload_documents(files: List[UploadFile]):
 ## 🔧 Core Components
 
 ### 1. **main.py** (FastAPI Application)
+
 - **Purpose:** HTTP API endpoints
 - **Endpoints:**
   - `GET /` - API info
@@ -95,6 +96,7 @@ async def upload_documents(files: List[UploadFile]):
 - **Based on:** `cloud-function/python/main.py` patterns
 
 ### 2. **config.py** (Configuration)
+
 - **Purpose:** Centralized config management
 - **Features:**
   - Loads from environment variables
@@ -106,6 +108,7 @@ async def upload_documents(files: List[UploadFile]):
   - Allowed file types
 
 ### 3. **gcs_uploader.py** (Cloud Storage)
+
 - **Purpose:** Handle GCS uploads
 - **Features:**
   - Upload files with unique names
@@ -115,6 +118,7 @@ async def upload_documents(files: List[UploadFile]):
 - **Based on:** `vais-building-blocks/ingesting_unstructured_documents_with_metadata.ipynb`
 
 ### 4. **vertex_ai_importer.py** (Document Import)
+
 - **Purpose:** Trigger Vertex AI Search imports
 - **Features:**
   - Import from GCS URIs
@@ -128,6 +132,7 @@ async def upload_documents(files: List[UploadFile]):
 ## 🚀 API Endpoints
 
 ### 1. Health Check
+
 ```bash
 GET /health
 
@@ -141,6 +146,7 @@ Response:
 ```
 
 ### 2. Upload Documents
+
 ```bash
 POST /upload
 Content-Type: multipart/form-data
@@ -167,6 +173,7 @@ Response (202 Accepted):
 ```
 
 ### 3. Check Import Status
+
 ```bash
 GET /operation/{operation_name}
 
@@ -207,17 +214,20 @@ API_VERSION=1.0.0
 ## 📚 Dependencies
 
 ### Core Libraries
+
 - `fastapi` - Web framework
 - `uvicorn` - ASGI server
 - `python-multipart` - File upload support
 
 ### Google Cloud
+
 - `google-cloud-storage` - GCS uploads
 - `google-cloud-discoveryengine` - Vertex AI Search
 - `google-api-core` - API utilities
 - `google-auth` - Authentication
 
 ### Configuration
+
 - `pydantic` - Data validation
 - `pydantic-settings` - Settings management
 - `python-dotenv` - .env file support
@@ -227,6 +237,7 @@ API_VERSION=1.0.0
 ## 🧪 Testing
 
 ### Quick Test
+
 ```bash
 # 1. Health check
 curl http://localhost:8000/health
@@ -237,9 +248,11 @@ python test_upload.py test.txt
 ```
 
 ### Interactive Testing
+
 Open http://localhost:8000/docs for Swagger UI
 
 ### Python Client
+
 ```python
 import requests
 
@@ -259,6 +272,7 @@ with open("doc.pdf", "rb") as f:
 This project demonstrates:
 
 1. **FastAPI Best Practices**
+
    - Async endpoints
    - File upload handling
    - Request validation
@@ -266,12 +280,14 @@ This project demonstrates:
    - API documentation
 
 2. **Google Cloud Integration**
+
    - Cloud Storage client usage
    - Vertex AI Search API
    - Authentication patterns
    - Long-running operations
 
 3. **Production Patterns**
+
    - Configuration management
    - Logging and monitoring
    - Modular code structure
@@ -289,18 +305,21 @@ This project demonstrates:
 ## 🚦 Next Steps
 
 ### Immediate (Get Running)
+
 1. Run `./setup.sh`
 2. Edit `.env` with your values
 3. Start server: `python main.py`
 4. Test: `python test_upload.py test.txt`
 
 ### Short-term (Enhancements)
+
 - [ ] Add metadata support for documents
 - [ ] Implement webhook notifications
 - [ ] Add batch upload API
 - [ ] Create web UI for uploads
 
 ### Long-term (Production)
+
 - [ ] Deploy to Cloud Run
 - [ ] Add authentication (API keys/OAuth)
 - [ ] Set up monitoring & alerting
@@ -311,22 +330,22 @@ This project demonstrates:
 
 ## 📊 Comparison: Repository vs. What You Needed
 
-| Feature | In Repository | In Your App |
-|---------|--------------|-------------|
-| Datastore creation | ✅ Notebooks | ❌ Not needed (already exists) |
-| GCS upload | ✅ Notebooks | ✅ `gcs_uploader.py` |
-| Import trigger | ✅ Notebooks | ✅ `vertex_ai_importer.py` |
-| FastAPI server | ❌ Only Flask/Functions | ✅ `main.py` |
-| File upload endpoint | ❌ None | ✅ `POST /upload` |
-| Multiple files | ❌ Not shown | ✅ Supported |
-| Unique filenames | ❌ Not shown | ✅ UUID prefixes |
-| File validation | ❌ Not shown | ✅ Type & size checks |
-| Health checks | ❌ Not shown | ✅ `/health` |
-| Configuration | ⚠️ Hardcoded | ✅ `.env` based |
-| Testing utilities | ❌ None | ✅ `test_upload.py` |
-| Documentation | ⚠️ Per-notebook | ✅ Comprehensive |
-| Docker support | ❌ None | ✅ Dockerfile |
-| Setup automation | ❌ Manual | ✅ `setup.sh` |
+| Feature              | In Repository           | In Your App                    |
+| -------------------- | ----------------------- | ------------------------------ |
+| Datastore creation   | ✅ Notebooks            | ❌ Not needed (already exists) |
+| GCS upload           | ✅ Notebooks            | ✅ `gcs_uploader.py`           |
+| Import trigger       | ✅ Notebooks            | ✅ `vertex_ai_importer.py`     |
+| FastAPI server       | ❌ Only Flask/Functions | ✅ `main.py`                   |
+| File upload endpoint | ❌ None                 | ✅ `POST /upload`              |
+| Multiple files       | ❌ Not shown            | ✅ Supported                   |
+| Unique filenames     | ❌ Not shown            | ✅ UUID prefixes               |
+| File validation      | ❌ Not shown            | ✅ Type & size checks          |
+| Health checks        | ❌ Not shown            | ✅ `/health`                   |
+| Configuration        | ⚠️ Hardcoded            | ✅ `.env` based                |
+| Testing utilities    | ❌ None                 | ✅ `test_upload.py`            |
+| Documentation        | ⚠️ Per-notebook         | ✅ Comprehensive               |
+| Docker support       | ❌ None                 | ✅ Dockerfile                  |
+| Setup automation     | ❌ Manual               | ✅ `setup.sh`                  |
 
 ---
 
@@ -335,12 +354,14 @@ This project demonstrates:
 From your requirements:
 
 1. **API Endpoints**
+
    - ✅ POST /upload - Accepts PDF, DOCX, TXT, HTML
    - ✅ Supports multiple file uploads
    - ✅ GET /health - Health check
    - ✅ Clear success/error responses with document IDs
 
 2. **Upload Workflow**
+
    - ✅ Accept file uploads from users
    - ✅ Upload raw files to GCS bucket
    - ✅ Trigger Vertex AI Search import
@@ -348,6 +369,7 @@ From your requirements:
    - ✅ Return operation status and document info
 
 3. **Technical Implementation**
+
    - ✅ FastAPI web server
    - ✅ GCS client library for uploads
    - ✅ Discovery Engine client library
@@ -356,12 +378,14 @@ From your requirements:
    - ✅ Proper error handling and logging
 
 4. **Configuration**
+
    - ✅ GCP_PROJECT_ID: metatask-461115
    - ✅ DATASTORE_ID: metatask_1761751621392
    - ✅ GCP_LOCATION: global
    - ✅ GCS_BUCKET_NAME: configurable
 
 5. **Key Features**
+
    - ✅ Clean error handling
    - ✅ Request/response validation
    - ✅ Comprehensive logging
@@ -380,21 +404,25 @@ From your requirements:
 ## 🏆 What Makes This Production-Ready
 
 1. **Reliability**
+
    - Comprehensive error handling
    - Validation at every step
    - Graceful failure modes
 
 2. **Maintainability**
+
    - Modular code structure
    - Clear separation of concerns
    - Extensive documentation
 
 3. **Scalability**
+
    - Async endpoints
    - Containerized (Docker)
    - Cloud-ready (Cloud Run)
 
 4. **Observability**
+
    - Structured logging
    - Health checks
    - Operation tracking
@@ -410,11 +438,13 @@ From your requirements:
 ## 💡 Key Insights
 
 ### From Repository Analysis
+
 - The repo had ~60% of what you needed (GCS upload, import patterns)
 - Missing: FastAPI wrapper, file handling, complete workflow
 - We successfully adapted patterns and filled the gaps
 
 ### Design Decisions
+
 1. **UUID prefixes** - Prevents filename collisions
 2. **INCREMENTAL mode** - Safe for continuous uploads
 3. **Async/await** - Better performance for I/O operations
@@ -422,6 +452,7 @@ From your requirements:
 5. **Modular structure** - Easy to extend and test
 
 ### Best Practices Applied
+
 - Environment-based configuration
 - Comprehensive error handling
 - Detailed logging
@@ -443,6 +474,7 @@ From your requirements:
 **Built with patterns from:** [GoogleCloudPlatform/generative-ai](https://github.com/GoogleCloudPlatform/generative-ai) repository
 
 **Ready to use your configuration:**
+
 - Project: `metatask-461115`
 - Datastore: `metatask_1761751621392`
 - Location: `global`

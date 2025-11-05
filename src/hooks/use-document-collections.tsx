@@ -30,7 +30,7 @@ export function useDocumentCollections(userId: string) {
         const newCollection = await documentApiClient.createCollection(
           userId,
           name,
-          description
+          description,
         );
         setCollections((prev) => [...prev, newCollection]);
         return newCollection;
@@ -41,7 +41,7 @@ export function useDocumentCollections(userId: string) {
         setLoading(false);
       }
     },
-    [userId]
+    [userId],
   );
 
   const deleteCollection = useCallback(
@@ -50,9 +50,7 @@ export function useDocumentCollections(userId: string) {
         setLoading(true);
         setError(null);
         await documentApiClient.deleteCollection(collectionId, userId);
-        setCollections((prev) =>
-          prev.filter((col) => col.id !== collectionId)
-        );
+        setCollections((prev) => prev.filter((col) => col.id !== collectionId));
       } catch (err) {
         setError(err as Error);
         throw err;
@@ -60,7 +58,7 @@ export function useDocumentCollections(userId: string) {
         setLoading(false);
       }
     },
-    [userId]
+    [userId],
   );
 
   const refreshCollection = useCallback(
@@ -68,16 +66,16 @@ export function useDocumentCollections(userId: string) {
       try {
         const updated = await documentApiClient.getCollection(
           collectionId,
-          userId
+          userId,
         );
         setCollections((prev) =>
-          prev.map((col) => (col.id === collectionId ? updated : col))
+          prev.map((col) => (col.id === collectionId ? updated : col)),
         );
       } catch (err) {
         console.error("Failed to refresh collection:", err);
       }
     },
-    [userId]
+    [userId],
   );
 
   return {
@@ -104,7 +102,7 @@ export function useDocuments(userId: string) {
         setError(null);
         const response = await documentApiClient.listCollectionDocuments(
           collectionId,
-          userId
+          userId,
         );
         setDocuments(response.documents);
       } catch (err) {
@@ -113,7 +111,7 @@ export function useDocuments(userId: string) {
         setLoading(false);
       }
     },
-    [userId]
+    [userId],
   );
 
   const uploadDocuments = useCallback(
@@ -126,7 +124,7 @@ export function useDocuments(userId: string) {
           userId,
           collectionId,
           files,
-          (progress) => setUploadProgress(progress)
+          (progress) => setUploadProgress(progress),
         );
         // Refresh document list after upload
         await loadDocuments(collectionId);
@@ -139,7 +137,7 @@ export function useDocuments(userId: string) {
         setUploadProgress(0);
       }
     },
-    [userId, loadDocuments]
+    [userId, loadDocuments],
   );
 
   const deleteDocument = useCallback(
@@ -156,7 +154,7 @@ export function useDocuments(userId: string) {
         setLoading(false);
       }
     },
-    [userId]
+    [userId],
   );
 
   return {

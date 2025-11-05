@@ -3,7 +3,6 @@
 import {
   Collection,
   CollectionListResponse,
-  Document,
   DocumentListResponse,
   UploadResponse,
   DeleteResponse,
@@ -27,7 +26,7 @@ class DocumentApiClient {
         .json()
         .catch(() => ({ detail: "Unknown error" }));
       throw new Error(
-        error.detail || `HTTP ${response.status}: ${response.statusText}`
+        error.detail || `HTTP ${response.status}: ${response.statusText}`,
       );
     }
     return response.json();
@@ -40,7 +39,7 @@ class DocumentApiClient {
   async createCollection(
     userId: string,
     name: string,
-    description?: string
+    description?: string,
   ): Promise<Collection> {
     const formData = new FormData();
     formData.append("user_id", userId);
@@ -57,7 +56,7 @@ class DocumentApiClient {
 
   async listCollections(
     userId: string,
-    options?: { limit?: number; offset?: number }
+    options?: { limit?: number; offset?: number },
   ): Promise<CollectionListResponse> {
     const params = new URLSearchParams({
       user_id: userId,
@@ -71,23 +70,23 @@ class DocumentApiClient {
 
   async getCollection(
     collectionId: string,
-    userId: string
+    userId: string,
   ): Promise<Collection> {
     const params = new URLSearchParams({ user_id: userId });
     const response = await fetch(
-      `${this.baseUrl}/collections/${collectionId}?${params}`
+      `${this.baseUrl}/collections/${collectionId}?${params}`,
     );
     return this.handleResponse<Collection>(response);
   }
 
   async deleteCollection(
     collectionId: string,
-    userId: string
+    userId: string,
   ): Promise<DeleteResponse> {
     const params = new URLSearchParams({ user_id: userId });
     const response = await fetch(
       `${this.baseUrl}/collections/${collectionId}?${params}`,
-      { method: "DELETE" }
+      { method: "DELETE" },
     );
     return this.handleResponse<DeleteResponse>(response);
   }
@@ -100,7 +99,7 @@ class DocumentApiClient {
     userId: string,
     collectionId: string,
     files: File[],
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
   ): Promise<UploadResponse> {
     const formData = new FormData();
     formData.append("user_id", userId);
@@ -150,7 +149,7 @@ class DocumentApiClient {
   async listCollectionDocuments(
     collectionId: string,
     userId: string,
-    options?: { limit?: number; offset?: number }
+    options?: { limit?: number; offset?: number },
   ): Promise<DocumentListResponse> {
     const params = new URLSearchParams({
       user_id: userId,
@@ -159,14 +158,14 @@ class DocumentApiClient {
     });
 
     const response = await fetch(
-      `${this.baseUrl}/collections/${collectionId}/documents?${params}`
+      `${this.baseUrl}/collections/${collectionId}/documents?${params}`,
     );
     return this.handleResponse<DocumentListResponse>(response);
   }
 
   async listAllDocuments(
     userId: string,
-    options?: { limit?: number; offset?: number; status?: string }
+    options?: { limit?: number; offset?: number; status?: string },
   ): Promise<DocumentListResponse> {
     const params = new URLSearchParams({
       user_id: userId,
@@ -184,12 +183,12 @@ class DocumentApiClient {
 
   async deleteDocument(
     documentId: string,
-    userId: string
+    userId: string,
   ): Promise<DeleteResponse> {
     const params = new URLSearchParams({ user_id: userId });
     const response = await fetch(
       `${this.baseUrl}/documents/${documentId}?${params}`,
-      { method: "DELETE" }
+      { method: "DELETE" },
     );
     return this.handleResponse<DeleteResponse>(response);
   }

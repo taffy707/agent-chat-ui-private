@@ -65,6 +65,7 @@ CREATE TABLE deletion_queue (
 ```
 
 ### Advantages
+
 ✅ **Guaranteed eventual consistency** - Will retry until successful
 ✅ **No user impact** - Deletion appears instant to user
 ✅ **Automatic recovery** - Handles temporary failures
@@ -72,6 +73,7 @@ CREATE TABLE deletion_queue (
 ✅ **Low overhead** - Only retries failed deletions
 
 ### Disadvantages
+
 ⚠️ Small window (30s-10m) where document might be searchable
 ⚠️ Requires background worker
 ⚠️ Additional database table
@@ -132,11 +134,13 @@ WHERE status = 'deleted'
 ```
 
 ### Advantages
+
 ✅ **100% success rate** - Always indexed by cleanup time
 ✅ **Simple implementation** - Just update status field
 ✅ **Batched operations** - More efficient
 
 ### Disadvantages
+
 ⚠️ **Delayed deletion** - Document searchable for 1+ hours
 ⚠️ **Privacy concern** - Deleted documents remain accessible
 ⚠️ **User confusion** - "Deleted" but still shows in search
@@ -176,10 +180,12 @@ while True:
 ```
 
 ### Advantages
+
 ✅ **No orphaned documents** - Can't delete until indexed
 ✅ **Simple logic** - No retry queue needed
 
 ### Disadvantages
+
 ⚠️ **Poor UX** - User can't delete until indexing finishes (minutes)
 ⚠️ **Slow uploads** - Must wait for indexing to complete
 ⚠️ **Blocking operations** - Ties up resources
@@ -221,10 +227,12 @@ vertex_ai_importer.list_documents(filter='deleted: ANY("true")')
 ```
 
 ### Advantages
+
 ✅ **Graceful handling** - Metadata survives indexing process
 ✅ **Audit trail** - Can track deletion requests
 
 ### Disadvantages
+
 ⚠️ **Requires metadata support** - Must upload JSONL with structData
 ⚠️ **Complex** - Need to change upload format
 ⚠️ **Still searchable** - Documents appear in results (must filter client-side)
@@ -252,10 +260,12 @@ User uploads → Save to staging bucket
 ```
 
 ### Advantages
+
 ✅ **Perfect consistency** - Only show indexed documents
 ✅ **No orphaned documents** - Can't delete unindexed docs
 
 ### Disadvantages
+
 ⚠️ **Complex architecture** - Need staging bucket + monitoring
 ⚠️ **Slow uploads** - User waits for indexing
 ⚠️ **Resource intensive** - Constant polling
@@ -264,13 +274,13 @@ User uploads → Save to staging bucket
 
 ## Comparison Table
 
-| Solution | Consistency | UX | Complexity | Privacy | Recommended |
-|----------|-------------|-----|------------|---------|-------------|
-| **Retry Queue** | Eventually (30s-10m) | Excellent | Medium | Good | ⭐ **YES** |
-| Soft Delete | 100% (after delay) | Poor | Low | Bad | ❌ No |
-| Wait for Import | 100% | Poor | Low | Good | ❌ No |
-| Metadata Marker | Eventually | Medium | High | Medium | ⚠️ Maybe |
-| Pre-indexed | 100% | Poor | High | Excellent | ❌ No |
+| Solution        | Consistency          | UX        | Complexity | Privacy   | Recommended |
+| --------------- | -------------------- | --------- | ---------- | --------- | ----------- |
+| **Retry Queue** | Eventually (30s-10m) | Excellent | Medium     | Good      | ⭐ **YES**  |
+| Soft Delete     | 100% (after delay)   | Poor      | Low        | Bad       | ❌ No       |
+| Wait for Import | 100%                 | Poor      | Low        | Good      | ❌ No       |
+| Metadata Marker | Eventually           | Medium    | High       | Medium    | ⚠️ Maybe    |
+| Pre-indexed     | 100%                 | Poor      | High       | Excellent | ❌ No       |
 
 ---
 
@@ -332,21 +342,22 @@ WORKER_INTERVAL = 60           # Check queue every 60 seconds
 
 **Vertex AI indexing typically takes 2-10 minutes**, so we optimize the retry schedule:
 
-| Attempt | Delay | Cumulative Time | Likelihood of Success |
-|---------|-------|-----------------|----------------------|
-| Initial | 0s | 0s | 0% (just uploaded) |
-| 1 | 2m | 2 minutes | 10% (still indexing) |
-| 2 | 3m | 5 minutes | 60% (typical indexing time) |
-| 3 | 5m | 10 minutes | 90% (most docs indexed) |
-| 4 | 10m | 20 minutes | 98% (slow docs) |
-| 5 | 15m | 35 minutes | 99.5% (edge cases) |
-| 6 | 30m | 65 minutes | 99.9% (very rare) |
-| 7 | 1h | 2h 5m | 99.99% |
-| 8 | 2h | 4h 5m | Final attempts |
-| 9 | 4h | 8h 5m | Final attempts |
-| 10 | 8h | 16h 5m | Max retries |
+| Attempt | Delay | Cumulative Time | Likelihood of Success       |
+| ------- | ----- | --------------- | --------------------------- |
+| Initial | 0s    | 0s              | 0% (just uploaded)          |
+| 1       | 2m    | 2 minutes       | 10% (still indexing)        |
+| 2       | 3m    | 5 minutes       | 60% (typical indexing time) |
+| 3       | 5m    | 10 minutes      | 90% (most docs indexed)     |
+| 4       | 10m   | 20 minutes      | 98% (slow docs)             |
+| 5       | 15m   | 35 minutes      | 99.5% (edge cases)          |
+| 6       | 30m   | 65 minutes      | 99.9% (very rare)           |
+| 7       | 1h    | 2h 5m           | 99.99%                      |
+| 8       | 2h    | 4h 5m           | Final attempts              |
+| 9       | 4h    | 8h 5m           | Final attempts              |
+| 10      | 8h    | 16h 5m          | Max retries                 |
 
 **Result**:
+
 - ✅ **90% of deletions succeed within 10 minutes**
 - ✅ **99% succeed within 20 minutes**
 - ✅ No wasted retries during the indexing period
@@ -390,6 +401,7 @@ DELETE FROM deletion_queue WHERE status = 'failed' AND created_at < NOW() - INTE
 ### 4. Graceful Degradation
 
 If the deletion queue worker fails:
+
 - Documents still deleted from PostgreSQL and GCS ✅
 - User experience unchanged ✅
 - Only Vertex AI has orphaned documents ⚠️

@@ -48,9 +48,11 @@ Users can now select which knowledge base collections to search when asking ques
 ### Frontend Changes
 
 #### 1. **Knowledge Base Selector Component**
+
 **File**: `src/components/thread/KnowledgeBaseSelector.tsx`
 
 **Two States**:
+
 ```typescript
 // No collections → Show "Create Your Knowledge Base" button
 if (collections.length === 0) {
@@ -62,31 +64,38 @@ return <DropdownMenu with checkboxes />
 ```
 
 **Features**:
+
 - Multi-select with checkboxes
 - Shows document count per collection
 - "Create New Collection" option in dropdown
 - Opens Document Manager for management
 
 #### 2. **Thread Component Integration**
+
 **File**: `src/components/thread/index.tsx`
 
 **State Management**:
+
 ```typescript
-const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>([]);
+const [selectedCollectionIds, setSelectedCollectionIds] = useState<string[]>(
+  [],
+);
 ```
 
 **Context Passing**:
+
 ```typescript
 const context = {
   ...artifactContext,
   user_id: "default-user",
-  collection_ids: selectedCollectionIds,  // ← Passed to LangGraph
+  collection_ids: selectedCollectionIds, // ← Passed to LangGraph
 };
 
 stream.submit({ messages, context }, options);
 ```
 
 #### 3. **UI Dropdown Component**
+
 **File**: `src/components/ui/dropdown-menu.tsx`
 
 Built with Radix UI for accessible dropdown menus with checkboxes.
@@ -96,9 +105,11 @@ Built with Radix UI for accessible dropdown menus with checkboxes.
 ### Backend Changes (LangGraph Server)
 
 #### 1. **Configuration Update**
+
 **File**: `retrieval-agent-template/src/retrieval_graph/configuration.py`
 
 Added `collection_ids` field:
+
 ```python
 @dataclass(kw_only=True)
 class IndexConfiguration:
@@ -112,9 +123,11 @@ class IndexConfiguration:
 ```
 
 #### 2. **Vertex AI Retriever Update**
+
 **File**: `retrieval-agent-template/src/retrieval_graph/retrieval.py`
 
 **Filter Building Logic**:
+
 ```python
 def make_vertex_ai_retriever(configuration: IndexConfiguration):
     filter_parts = []
@@ -146,6 +159,7 @@ def make_vertex_ai_retriever(configuration: IndexConfiguration):
 ```
 
 **Example Filter Output**:
+
 ```
 user_id: ANY("default-user") AND (collection_id: ANY("abc123") OR collection_id: ANY("def456"))
 ```
@@ -204,17 +218,17 @@ user_id: ANY("default-user") AND (collection_id: ANY("abc123") OR collection_id:
 ### Step-by-Step
 
 1. **User selects collections**:
+
    - "Work Docs" (ID: `abc123`)
    - "Personal Notes" (ID: `def456`)
 
 2. **User asks**: "What is our Q4 strategy?"
 
 3. **Frontend sends to LangGraph**:
+
 ```json
 {
-  "messages": [
-    {"type": "human", "content": "What is our Q4 strategy?"}
-  ],
+  "messages": [{ "type": "human", "content": "What is our Q4 strategy?" }],
   "context": {
     "user_id": "default-user",
     "collection_ids": ["abc123", "def456"]
@@ -223,10 +237,12 @@ user_id: ANY("default-user") AND (collection_id: ANY("abc123") OR collection_id:
 ```
 
 4. **LangGraph processes**:
+
    - Reads `collection_ids` from context
    - Builds filter: `user_id: ANY("default-user") AND (collection_id: ANY("abc123") OR collection_id: ANY("def456"))`
 
 5. **Vertex AI Search**:
+
    - Searches only documents where:
      - `user_id = "default-user"` AND
      - `collection_id = "abc123"` OR `collection_id = "def456"`
@@ -244,16 +260,19 @@ user_id: ANY("default-user") AND (collection_id: ANY("abc123") OR collection_id:
 ### For End Users
 
 1. **Create Collections**:
+
    - Click "Create Your Knowledge Base"
    - Create a new collection (e.g., "Work Docs")
    - Upload documents to it
 
 2. **Select Collections to Search**:
+
    - Click "Select Knowledge Base" dropdown
    - Check the collections you want to search
    - Selected collections highlighted with checkmark
 
 3. **Ask Questions**:
+
    - Type your question
    - Agent searches ONLY selected collections
    - Get focused, relevant answers
@@ -268,18 +287,21 @@ user_id: ANY("default-user") AND (collection_id: ANY("abc123") OR collection_id:
 #### Debugging Collection Filters
 
 **Check what's being sent**:
+
 ```typescript
 console.log("Selected collections:", selectedCollectionIds);
 console.log("Context:", context);
 ```
 
 **Check LangGraph logs**:
+
 ```bash
 cd retrieval-agent-template
 docker-compose logs -f api | grep collection
 ```
 
 **Check Vertex AI filter**:
+
 ```python
 # In retrieval.py, add logging
 print(f"Filter expression: {filter_expr}")
@@ -290,12 +312,14 @@ print(f"Filter expression: {filter_expr}")
 ## 📊 Benefits
 
 ### User Benefits
+
 ✅ **Focused Results** - Search only relevant collections
 ✅ **Faster Answers** - Less noise from irrelevant docs
 ✅ **Organized Knowledge** - Separate work/personal/archive
 ✅ **Flexible Searching** - Mix & match collections
 
 ### Technical Benefits
+
 ✅ **Better Performance** - Smaller search space
 ✅ **Accurate Filtering** - Metadata-based, not fuzzy
 ✅ **Scalable** - Handles thousands of documents
@@ -310,6 +334,7 @@ print(f"Filter expression: {filter_expr}")
 Currently hardcoded to `"default-user"`. To change:
 
 **Frontend** (`src/components/thread/index.tsx`):
+
 ```typescript
 <KnowledgeBaseSelector
   userId="alice"  // ← Change here
@@ -319,9 +344,10 @@ Currently hardcoded to `"default-user"`. To change:
 ```
 
 **And in context**:
+
 ```typescript
 const context = {
-  user_id: "alice",  // ← Change here
+  user_id: "alice", // ← Change here
   collection_ids: selectedCollectionIds,
 };
 ```
@@ -329,11 +355,13 @@ const context = {
 ### Default Behavior
 
 **If no collections selected** (empty array):
+
 - LangGraph searches ALL user's collections
 - Only user_id filter applied
 - No collection filter added
 
 **To require selection**:
+
 ```typescript
 // In handleSubmit, add validation:
 if (selectedCollectionIds.length === 0) {
@@ -349,6 +377,7 @@ if (selectedCollectionIds.length === 0) {
 ### Manual Test Flow
 
 1. **Start both servers**:
+
 ```bash
 # Terminal 1: Document API
 cd document-api && ./docker-start.sh
@@ -361,6 +390,7 @@ pnpm dev
 ```
 
 2. **Create test collections**:
+
    - Open http://localhost:3000
    - Click "Create Your Knowledge Base"
    - Create "Test Collection 1"
@@ -379,18 +409,21 @@ pnpm dev
 ### Expected Behavior
 
 **Scenario A: Select Collection 1**
+
 ```
 Q: "What does the document say?"
 A: [Uses only documents from Collection 1]
 ```
 
 **Scenario B: Select Collection 2**
+
 ```
 Q: "What does the document say?"
 A: [Uses only documents from Collection 2 - different answer]
 ```
 
 **Scenario C: Select Both**
+
 ```
 Q: "What does the document say?"
 A: [Uses documents from both collections - combined answer]
@@ -401,6 +434,7 @@ A: [Uses documents from both collections - combined answer]
 ## 📚 Related Files
 
 ### Frontend
+
 - `src/components/thread/KnowledgeBaseSelector.tsx` - Selector component
 - `src/components/thread/index.tsx` - Integration point
 - `src/components/ui/dropdown-menu.tsx` - Dropdown UI
@@ -408,11 +442,13 @@ A: [Uses documents from both collections - combined answer]
 - `src/types/document-api.ts` - TypeScript types
 
 ### Backend (LangGraph)
+
 - `retrieval-agent-template/src/retrieval_graph/configuration.py` - Config
 - `retrieval-agent-template/src/retrieval_graph/retrieval.py` - Filter logic
 - `retrieval-agent-template/src/retrieval_graph/graph.py` - Graph definition
 
 ### Document API
+
 - `document-api/main.py` - Collections endpoints
 - `document-api/database.py` - Collection metadata storage
 
@@ -421,6 +457,7 @@ A: [Uses documents from both collections - combined answer]
 ## 🎯 Future Enhancements
 
 Potential improvements:
+
 - [ ] Save selected collections per user (persistence)
 - [ ] Quick filters: "All", "Recent", "Favorites"
 - [ ] Collection search/filter in dropdown

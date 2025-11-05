@@ -25,6 +25,7 @@ Vertex AI indexing is asynchronous and can take 1-30 minutes. When users deleted
 **File**: `document-api/deletion_queue.py`
 
 **Change**: Increased retry window
+
 - `max_attempts`: 10 → 60
 - Total retry time: ~10 minutes → ~2 hours
 - Uses existing exponential backoff schedule
@@ -38,6 +39,7 @@ Track document indexing status and prevent premature deletion.
 #### Backend Changes
 
 **1. Database Schema** (`migrations/001_add_index_status.sql`)
+
 ```sql
 ALTER TABLE documents
   ADD COLUMN index_status VARCHAR(50) DEFAULT 'pending';
@@ -46,27 +48,32 @@ ALTER TABLE documents
 ```
 
 Status values:
+
 - `pending`: Uploaded, waiting to start indexing
 - `indexing`: Vertex AI is currently processing
 - `indexed`: Ready to use (can be deleted safely)
 - `failed`: Indexing failed
 
 **2. Database Methods** (`database.py`)
+
 - `insert_document()`: Now accepts `import_operation_id` parameter
 - `update_document_index_status()`: Updates status and completion time
 - `get_documents_by_index_status()`: Query documents by status
 
 **3. Index Status Worker** (`index_status_worker.py`)
+
 - New background service that runs every 2 minutes
 - Polls Vertex AI for operation status
 - Updates document status when indexing completes
 - Handles edge cases (missing operation IDs, long delays)
 
 **4. Upload Endpoint** (`main.py`)
+
 - Stores Vertex AI `import_operation_id` when uploading
 - Sets initial status to `indexing` if operation ID exists
 
 **5. Delete Endpoint** (`main.py`)
+
 ```python
 if index_status in ["pending", "indexing"]:
     raise HTTPException(
@@ -78,6 +85,7 @@ if index_status in ["pending", "indexing"]:
 #### Frontend Changes
 
 **1. TypeScript Types** (`src/types/document-api.ts`)
+
 ```typescript
 export type IndexStatus = "pending" | "indexing" | "indexed" | "failed";
 
@@ -90,11 +98,13 @@ export interface Document {
 ```
 
 **2. UI Status Badges** (`src/components/document-manager/index.tsx`)
+
 - **Processing**: Amber badge with pulsing clock icon
 - **Ready**: Green badge with checkmark
 - **Failed**: Red badge with alert icon
 
 **3. Delete Button**
+
 - Disabled when `index_status` is "pending" or "indexing"
 - Tooltip explains: "Cannot delete while document is being processed"
 - Only enabled when status is "indexed"
@@ -104,12 +114,14 @@ export interface Document {
 **File**: `document-api/cleanup_orphaned_documents.py`
 
 Manual cleanup tool for existing orphaned documents:
+
 - Lists all failed deletions from queue
 - Attempts to delete each from Vertex AI
 - Clears failed queue entries
 - Interactive with confirmation prompts
 
 **Results from running cleanup**:
+
 - Found 6 orphaned documents
 - All returned 404 (not found) - meaning they were never indexed or already gone
 - Cleared deletion queue successfully
@@ -117,6 +129,7 @@ Manual cleanup tool for existing orphaned documents:
 ## How It Works Now
 
 ### Upload Flow
+
 ```
 1. User uploads file
 2. File → GCS
@@ -133,6 +146,7 @@ Manual cleanup tool for existing orphaned documents:
 ```
 
 ### Delete Flow
+
 ```
 1. User clicks delete
 2. Check index_status:
@@ -147,14 +161,17 @@ Manual cleanup tool for existing orphaned documents:
 ## Testing
 
 ### Test Scenario 1: Upload → Immediate Delete
+
 **Before Fix**: Document remains in Vertex AI (orphaned)
 **After Fix**: Delete button disabled, shows "Processing..." badge
 
 ### Test Scenario 2: Upload → Wait → Delete
+
 **Before Fix**: Works if you wait long enough (guesswork)
 **After Fix**: "Ready" badge appears when safe, delete button enables
 
 ### Test Scenario 3: Existing Orphaned Documents
+
 **Before Fix**: Stuck in failed queue forever
 **After Fix**: Cleanup script removes them, clears queue
 
@@ -163,11 +180,13 @@ Manual cleanup tool for existing orphaned documents:
 ### Background Workers
 
 **Deletion Queue Worker**
+
 - Interval: 60 seconds
 - Checks for pending Vertex AI deletions
 - Retries up to 60 times with exponential backoff
 
 **Index Status Worker**
+
 - Interval: 120 seconds (2 minutes)
 - Polls Vertex AI operation status
 - Updates document index_status
@@ -188,17 +207,20 @@ Both workers start automatically on API startup.
 ### For Existing Deployments
 
 1. **Run database migration**:
+
    ```bash
    psql -h localhost -U <user> -d <database> -f migrations/001_add_index_status.sql
    ```
 
 2. **Rebuild Docker container**:
+
    ```bash
    docker-compose down
    docker-compose up -d --build
    ```
 
 3. **Clean up orphaned documents** (optional):
+
    ```bash
    python3 cleanup_orphaned_documents.py
    ```
@@ -216,6 +238,7 @@ Both workers start automatically on API startup.
 ### Check Indexing Status
 
 **PostgreSQL Query**:
+
 ```sql
 SELECT
   index_status,
@@ -225,6 +248,7 @@ GROUP BY index_status;
 ```
 
 **Expected Results**:
+
 - Most documents: `indexed`
 - Recently uploaded: `indexing`
 - Few/none: `pending`, `failed`
@@ -236,6 +260,7 @@ curl http://localhost:8000/deletion-queue/stats
 ```
 
 **Healthy System**:
+
 ```json
 {
   "pending": 0-2,
@@ -251,6 +276,7 @@ docker logs document-api | grep -E "(Index status|Deletion queue)"
 ```
 
 Look for:
+
 - `🚀 Index status worker started`
 - `📊 Index status update: X completed`
 - `🚀 Deletion queue worker started`
@@ -279,11 +305,13 @@ Look for:
 **Symptom**: Badge says "Processing..." for >30 minutes
 
 **Check**:
+
 1. View worker logs: `docker logs document-api | grep "Index status"`
 2. Check if worker is running: Should see log every 2 minutes
 3. Check operation ID exists: Query PostgreSQL for `import_operation_id`
 
 **Fix**:
+
 ```sql
 -- Manually mark as indexed if stuck
 UPDATE documents
@@ -297,6 +325,7 @@ WHERE id = 'document-id-here';
 **Symptom**: Can't delete any documents
 
 **Check**:
+
 1. Verify document status: `SELECT index_status FROM documents WHERE id = 'xxx'`
 2. If status is "indexing" for old documents, worker may have failed
 
@@ -309,6 +338,7 @@ WHERE id = 'document-id-here';
 **Check**: `curl http://localhost:8000/deletion-queue/stats`
 
 **Causes**:
+
 - Vertex AI temporarily down
 - Network issues
 - Rate limiting

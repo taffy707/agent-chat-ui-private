@@ -92,6 +92,7 @@ export default function ThreadHistory() {
       .then(setThreads)
       .catch(console.error)
       .finally(() => setThreadsLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

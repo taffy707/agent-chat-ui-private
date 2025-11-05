@@ -3,6 +3,7 @@
 ## Overview
 
 This guide covers deploying your FastAPI document management system to production using:
+
 - **Docker** for containerization
 - **Google Cloud Run** for serverless hosting
 - **Cloud SQL** for PostgreSQL database
@@ -99,7 +100,7 @@ Create `docker-compose.yml`:
 ```yaml
 # docker-compose.yml
 
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -145,6 +146,7 @@ volumes:
 ```
 
 Run with:
+
 ```bash
 docker-compose up -d
 ```
@@ -335,7 +337,10 @@ Create `task-definition.json`:
       ],
       "environment": [
         { "name": "GCP_PROJECT_ID", "value": "metatask-461115" },
-        { "name": "VERTEX_AI_DATA_STORE_ID", "value": "metatask_1761751621392" },
+        {
+          "name": "VERTEX_AI_DATA_STORE_ID",
+          "value": "metatask_1761751621392"
+        },
         { "name": "POSTGRES_HOST", "value": "your-rds-endpoint.amazonaws.com" },
         { "name": "POSTGRES_DB", "value": "vertex_ai_documents" }
       ],
@@ -536,6 +541,7 @@ gcloud run services update document-api \
 ### 2. Connection Pooling
 
 Already configured in `database.py` with:
+
 - Min pool size: 2
 - Max pool size: 10
 - Command timeout: 60s
@@ -596,11 +602,13 @@ jobs:
 ### Cloud Run Pricing
 
 **Free Tier:**
+
 - 2 million requests/month
 - 360,000 GB-seconds/month
 - 180,000 vCPU-seconds/month
 
 **After Free Tier:**
+
 - $0.00002400/request
 - $0.00001800/GB-second
 - $0.00002400/vCPU-second
@@ -608,9 +616,11 @@ jobs:
 ### Cloud SQL Pricing
 
 **db-f1-micro (development):**
+
 - ~$7/month
 
 **db-custom-1-3840 (production):**
+
 - ~$50/month
 
 ### Recommendations
@@ -622,6 +632,7 @@ jobs:
 5. ✅ Enable deletion queue to batch operations
 
 **Estimated Monthly Cost:**
+
 - Cloud Run: $0-20 (depending on traffic)
 - Cloud SQL: $7-50 (depending on size)
 - Cloud Storage: Already configured

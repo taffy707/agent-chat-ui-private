@@ -5,6 +5,7 @@
 The `/Users/tafadzwabwakura/Desktop/search` folder contains examples from Google's Vertex AI Search documentation that show **exactly** how to delete documents:
 
 ### 1. Individual Document Deletion (REST API)
+
 **File**: `vais-building-blocks/inline_ingestion_of_documents.ipynb`
 
 ```python
@@ -28,6 +29,7 @@ def delete_document_datastore(
 **This is what your code uses!** ✅
 
 ### 2. Bulk Purge (Python SDK)
+
 **File**: `tuning/vertexai-search-tuning.ipynb`
 
 ```python
@@ -67,6 +69,7 @@ curl -X DELETE "http://localhost:8000/documents/{doc_id}?user_id={user_id}"
 ```
 
 **Response includes verification**:
+
 ```json
 {
   "status": "success",
@@ -100,6 +103,7 @@ curl "http://localhost:8000/debug/verify-document/c0744c175a37_bitcoin.pdf"
 ```
 
 **If deleted successfully**:
+
 ```json
 {
   "status": "not_found",
@@ -110,6 +114,7 @@ curl "http://localhost:8000/debug/verify-document/c0744c175a37_bitcoin.pdf"
 ```
 
 **If still exists** (deletion failed):
+
 ```json
 {
   "status": "found",
@@ -136,6 +141,7 @@ curl "http://localhost:8000/debug/vertex-ai-documents"
 ```
 
 **Response**:
+
 ```json
 {
   "status": "success",
@@ -180,6 +186,7 @@ curl -X DELETE "http://localhost:8000/documents/{doc_id}?user_id={user_id}"
 ```
 
 Check the response:
+
 - ✅ `deletion_status.vertex_ai: true` - Deletion command succeeded
 - ✅ `vertex_ai_verification.verified: true` - Confirmed document is gone
 
@@ -209,6 +216,7 @@ Test that the document no longer appears in search results:
 ### In [vertex_ai_importer.py](vertex_ai_importer.py):
 
 1. **`get_document(vertex_ai_doc_id)`** (lines 284-335)
+
    - Fetches a specific document from Vertex AI
    - Returns `(exists: bool, document_data: dict | None)`
    - Returns `False` if document doesn't exist (404 error)
@@ -221,11 +229,13 @@ Test that the document no longer appears in search results:
 ### In [main.py](main.py):
 
 1. **Enhanced DELETE endpoint** (lines 861-996)
+
    - Automatically verifies deletion after deleting
    - Returns `vertex_ai_verification` in response
    - Shows status for all three systems (PostgreSQL, GCS, Vertex AI)
 
 2. **`GET /debug/verify-document/{id}`** (lines 819-858)
+
    - Standalone verification endpoint
    - Check any document ID at any time
    - Returns existence status and document data
@@ -244,14 +254,17 @@ Based on the files in `/Users/tafadzwabwakura/Desktop/search`:
 ### ✅ Methods Confirmed by Google Docs:
 
 1. **Individual Document Deletion**: ✅ YES
+
    - REST API: `DELETE /documents/{document_id}`
    - Python SDK: `client.delete_document()`
 
 2. **Bulk Purge**: ✅ YES
+
    - Python SDK: `client.purge_documents(force=True)`
    - Must set `force=True` to actually delete
 
 3. **Get Document (for verification)**: ✅ YES
+
    - REST API: `GET /documents/{document_id}`
    - Python SDK: `client.get_document()`
 
@@ -273,11 +286,13 @@ Based on the files in `/Users/tafadzwabwakura/Desktop/search`:
 ### Issue: Deletion says "success" but document still exists
 
 **Diagnosis**:
+
 ```bash
 curl "http://localhost:8000/debug/verify-document/{doc_id}"
 ```
 
 If `exists: true`, the deletion didn't work. Check:
+
 1. Is the document ID correct? (compare with `/debug/vertex-ai-documents`)
 2. Check the logs for the exact error message
 3. Look for ID mismatch (old documents have wrong IDs)
@@ -287,6 +302,7 @@ If `exists: true`, the deletion didn't work. Check:
 ### Issue: Verification endpoint returns 404 error (not exists: false)
 
 This means the API call itself failed. Check:
+
 1. Vertex AI credentials are correct
 2. Data store ID is correct
 3. Location is correct (global, us, eu)
@@ -299,6 +315,7 @@ This means the API call itself failed. Check:
 **Wait time**: Can take 1-5 minutes for index to fully update.
 
 **Verify**:
+
 1. Check `/debug/vertex-ai-documents` - should not appear
 2. Check `/debug/verify-document/{id}` - should return `exists: false`
 3. Wait a few minutes and try retrieval again
@@ -345,18 +362,23 @@ curl "http://localhost:8000/debug/vertex-ai-documents" | grep "abc123_test.pdf"
 ## Summary
 
 ### Question 1: Does the search folder show how to delete?
+
 **Answer**: ✅ **YES!** The folder contains Google's official examples for:
+
 - Individual document deletion (REST API)
 - Bulk purge (Python SDK with `force=True`)
 - Document verification (get/list operations)
 
 ### Question 2: How to confirm deletion actually worked?
+
 **Answer**: ✅ **THREE METHODS NOW AVAILABLE!**
+
 1. **Automatic**: Delete endpoint now returns `vertex_ai_verification` status
 2. **Manual Check**: `GET /debug/verify-document/{id}` endpoint
 3. **List All**: `GET /debug/vertex-ai-documents` to see all indexed documents
 
 ### Key Verification Points:
+
 - ✅ Document should NOT appear in `/debug/vertex-ai-documents`
 - ✅ Verify endpoint should return `exists: false`
 - ✅ Delete response should show `vertex_ai_verification.verified: true`

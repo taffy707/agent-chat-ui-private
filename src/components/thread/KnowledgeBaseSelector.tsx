@@ -42,7 +42,8 @@ export function KnowledgeBaseSelector({
       const response = await documentApiClient.listCollections(userId);
       setCollections(response.collections);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load collections";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to load collections";
       setError(errorMessage);
       toast.error("Failed to load collections", {
         description: errorMessage,
@@ -57,16 +58,19 @@ export function KnowledgeBaseSelector({
     loadCollections();
   }, [loadCollections]);
 
-  const toggleCollection = useCallback((collectionId: string) => {
-    const isSelected = selectedCollectionIds.includes(collectionId);
-    if (isSelected) {
-      onSelectionChange(
-        selectedCollectionIds.filter((id) => id !== collectionId)
-      );
-    } else {
-      onSelectionChange([...selectedCollectionIds, collectionId]);
-    }
-  }, [selectedCollectionIds, onSelectionChange]);
+  const toggleCollection = useCallback(
+    (collectionId: string) => {
+      const isSelected = selectedCollectionIds.includes(collectionId);
+      if (isSelected) {
+        onSelectionChange(
+          selectedCollectionIds.filter((id) => id !== collectionId),
+        );
+      } else {
+        onSelectionChange([...selectedCollectionIds, collectionId]);
+      }
+    },
+    [selectedCollectionIds, onSelectionChange],
+  );
 
   const handleCreateNew = useCallback(() => {
     setDocumentManagerOpen(true);
@@ -79,13 +83,17 @@ export function KnowledgeBaseSelector({
   }, [loadCollections]);
 
   // Memoize computed values
-  const selectedCount = useMemo(() => selectedCollectionIds.length, [selectedCollectionIds]);
+  const selectedCount = useMemo(
+    () => selectedCollectionIds.length,
+    [selectedCollectionIds],
+  );
 
-  const selectedNames = useMemo(() =>
-    collections
-      .filter((c) => selectedCollectionIds.includes(c.id))
-      .map((c) => c.name),
-    [collections, selectedCollectionIds]
+  const selectedNames = useMemo(
+    () =>
+      collections
+        .filter((c) => selectedCollectionIds.includes(c.id))
+        .map((c) => c.name),
+    [collections, selectedCollectionIds],
   );
 
   const buttonText = useMemo(() => {
@@ -100,7 +108,7 @@ export function KnowledgeBaseSelector({
       <Button
         variant="outline"
         disabled
-        className="flex items-center gap-2 h-10 px-4 rounded-lg border border-gray-300 bg-white"
+        className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-white px-4"
       >
         <Loader2 className="h-4 w-4 animate-spin" />
         <span className="font-medium">Loading...</span>
@@ -114,11 +122,11 @@ export function KnowledgeBaseSelector({
       <div className="flex items-center gap-2">
         <Button
           variant="outline"
-          className="flex items-center gap-2 h-10 px-4 rounded-lg border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+          className="flex h-10 items-center gap-2 rounded-lg border-red-300 bg-red-50 px-4 text-red-700 hover:bg-red-100"
           onClick={loadCollections}
         >
           <AlertCircle className="h-4 w-4" />
-          <span className="font-medium hidden sm:inline">Failed to load</span>
+          <span className="hidden font-medium sm:inline">Failed to load</span>
           <span className="font-medium sm:hidden">Error</span>
         </Button>
         <Button
@@ -139,11 +147,11 @@ export function KnowledgeBaseSelector({
       <>
         <Button
           variant="outline"
-          className="flex items-center gap-2 h-10 px-3 sm:px-4 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+          className="flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 transition-colors hover:bg-gray-50 sm:px-4"
           onClick={handleCreateNew}
         >
           <Plus className="h-4 w-4 flex-shrink-0" />
-          <span className="font-medium text-sm sm:text-base whitespace-nowrap">
+          <span className="text-sm font-medium whitespace-nowrap sm:text-base">
             Create Your Knowledge Base
           </span>
         </Button>
@@ -152,7 +160,10 @@ export function KnowledgeBaseSelector({
           open={documentManagerOpen}
           onOpenChange={setDocumentManagerOpen}
         >
-          <SheetContent side="right" className="w-full sm:max-w-4xl p-0">
+          <SheetContent
+            side="right"
+            className="w-full p-0 sm:max-w-4xl"
+          >
             <DocumentManager
               userId={userId}
               onClose={handleDocumentManagerClose}
@@ -171,19 +182,19 @@ export function KnowledgeBaseSelector({
           <Button
             variant="outline"
             className={cn(
-              "flex items-center gap-2 h-10 px-3 sm:px-4 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 transition-colors",
-              selectedCount > 0 && "border-primary bg-primary/5"
+              "flex h-10 items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 transition-colors hover:bg-gray-50 sm:px-4",
+              selectedCount > 0 && "border-primary bg-primary/5",
             )}
           >
-            <span className="font-medium text-sm sm:text-base truncate max-w-[120px] sm:max-w-[200px]">
+            <span className="max-w-[120px] truncate text-sm font-medium sm:max-w-[200px] sm:text-base">
               {buttonText}
             </span>
-            <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+            <ChevronDown className="h-4 w-4 flex-shrink-0 opacity-50" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
-          className="w-80 max-h-[500px] overflow-y-auto bg-white dark:bg-gray-900"
+          className="max-h-[500px] w-80 overflow-y-auto bg-white dark:bg-gray-900"
           onCloseAutoFocus={(e) => {
             // Prevent auto-focus after closing to improve multi-select UX
             e.preventDefault();
@@ -193,7 +204,7 @@ export function KnowledgeBaseSelector({
             <span>
               Select Collections
               {selectedCount > 0 && (
-                <span className="ml-2 text-xs text-muted-foreground font-normal">
+                <span className="text-muted-foreground ml-2 text-xs font-normal">
                   ({selectedCount} of {collections.length})
                 </span>
               )}
@@ -217,9 +228,11 @@ export function KnowledgeBaseSelector({
                 checkPosition="right"
                 className="cursor-pointer"
               >
-                <div className="flex flex-col gap-0.5 py-1 flex-1 min-w-0">
-                  <span className="font-medium truncate">{collection.name}</span>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5 py-1">
+                  <span className="truncate font-medium">
+                    {collection.name}
+                  </span>
+                  <div className="text-muted-foreground flex items-center gap-2 text-xs">
                     <span>
                       {collection.document_count} document
                       {collection.document_count !== 1 ? "s" : ""}
@@ -227,7 +240,10 @@ export function KnowledgeBaseSelector({
                     {collection.description && (
                       <>
                         <span>•</span>
-                        <span className="truncate" title={collection.description}>
+                        <span
+                          className="truncate"
+                          title={collection.description}
+                        >
                           {collection.description}
                         </span>
                       </>
@@ -244,13 +260,13 @@ export function KnowledgeBaseSelector({
           <div className="p-2">
             <Button
               variant="ghost"
-              className="w-full justify-start h-9"
+              className="h-9 w-full justify-start"
               onClick={(e) => {
                 e.stopPropagation();
                 handleCreateNew();
               }}
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Create New Collection
             </Button>
           </div>
@@ -259,7 +275,7 @@ export function KnowledgeBaseSelector({
           {selectedCount > 0 && (
             <>
               <DropdownMenuSeparator />
-              <div className="px-2 py-2 text-xs text-muted-foreground">
+              <div className="text-muted-foreground px-2 py-2 text-xs">
                 {selectedCount === collections.length
                   ? "Searching all collections"
                   : `Searching ${selectedCount} collection${selectedCount !== 1 ? "s" : ""}`}
@@ -270,8 +286,14 @@ export function KnowledgeBaseSelector({
       </DropdownMenu>
 
       {/* Document Manager Sheet */}
-      <Sheet open={documentManagerOpen} onOpenChange={setDocumentManagerOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-4xl p-0">
+      <Sheet
+        open={documentManagerOpen}
+        onOpenChange={setDocumentManagerOpen}
+      >
+        <SheetContent
+          side="right"
+          className="w-full p-0 sm:max-w-4xl"
+        >
           <DocumentManager
             userId={userId}
             onClose={handleDocumentManagerClose}

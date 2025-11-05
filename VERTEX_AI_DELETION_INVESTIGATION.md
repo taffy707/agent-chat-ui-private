@@ -1,6 +1,7 @@
 # Vertex AI Deletion Investigation
 
 ## Issue Report
+
 **Date**: November 3, 2025
 **Reported by**: User
 **Issue**: Documents deleted from UI can still be found by retrieval agent
@@ -16,6 +17,7 @@
 ### What's Happening ⚠️
 
 When you delete a document, three things need to happen:
+
 ```
 1. Delete from GCS        → ✅ INSTANT (works)
 2. Delete from PostgreSQL → ✅ INSTANT (works)
@@ -43,6 +45,7 @@ Document Searchable
 ### The Problem Scenario
 
 **Timeline**:
+
 1. **T+0**: User uploads document → Goes to GCS + triggers import
 2. **T+1**: User deletes document → Removed from GCS + PostgreSQL
 3. **T+1**: System tries to delete from Vertex AI → **404 ERROR** (not indexed yet!)
@@ -53,6 +56,7 @@ Document Searchable
 ## Evidence from Your System
 
 ### Deletion Queue Status
+
 ```
 pending: 4 documents (still retrying)
 failed:  6 documents (gave up after 10 attempts)
@@ -60,7 +64,9 @@ total:   10 documents stuck
 ```
 
 ### Failed Deletions
+
 These documents reached max retries and gave up:
+
 ```sql
 vertex_ai_doc_id                               | status
 ------------------------------------------------+--------
@@ -75,6 +81,7 @@ c4dd9e426f3c_pasta_recipe.txt                  | failed
 **These documents are likely STILL IN VERTEX AI SEARCH INDEX** 🔴
 
 ### What Happened
+
 1. You uploaded these documents
 2. You deleted them before Vertex AI finished indexing
 3. Deletion queue tried 10 times to delete → All 404 (not found)
@@ -130,12 +137,14 @@ The deletion logic has a race condition:
 **Vertex AI Import is a TWO-STEP process**:
 
 **Step 1**: Trigger Import (returns immediately)
+
 ```python
 operation = vertex_ai.import_documents(gcs_uris)
 # Returns instantly with operation_id
 ```
 
 **Step 2**: Async Processing (takes 1-30 minutes)
+
 ```
 Vertex AI backend:
 - Fetches files from GCS
@@ -151,15 +160,18 @@ Vertex AI backend:
 ### Option 1: Wait for Indexing Before Allowing Deletion (BEST) ⭐
 
 **Pros**:
+
 - Guarantees no orphaned documents
 - User sees clear "Processing..." state
 - Deletions always succeed
 
 **Cons**:
+
 - User must wait 1-30 minutes before deleting new uploads
 - More complex UI
 
 **Implementation**:
+
 1. Track import operation status
 2. Poll Vertex AI for completion
 3. Update document status: `uploaded` → `indexing` → `indexed`
@@ -169,14 +181,17 @@ Vertex AI backend:
 ### Option 2: Increase Retry Window (PARTIAL FIX) ⚙️
 
 **Pros**:
+
 - Simple fix
 - Works for most cases
 
 **Cons**:
+
 - Still has race condition for very slow indexing
 - Wastes resources on retries
 
 **Implementation**:
+
 ```python
 # Current: max_attempts = 10, retry every ~1 minute
 # New: max_attempts = 60, retry every ~2 minutes
@@ -186,10 +201,12 @@ Vertex AI backend:
 ### Option 3: Manual Cleanup Endpoint (WORKAROUND) 🔧
 
 **Pros**:
+
 - Fixes existing orphaned documents
 - Good for admin/maintenance
 
 **Cons**:
+
 - Doesn't prevent future orphans
 - Requires manual intervention
 
@@ -199,10 +216,12 @@ Add endpoint to force-delete specific Vertex AI documents by ID.
 ### Option 4: Purge API (NUCLEAR OPTION) ☢️
 
 **Pros**:
+
 - Can delete multiple documents at once
 - Handles large-scale cleanup
 
 **Cons**:
+
 - Requires purge operation (24-48 hour process)
 - Deletes ALL documents matching a filter
 - Cannot target individual documents
@@ -214,6 +233,7 @@ Add endpoint to force-delete specific Vertex AI documents by ID.
 ### Phase 1: Track Index Status
 
 Add to documents table:
+
 ```sql
 ALTER TABLE documents
 ADD COLUMN index_status VARCHAR(50) DEFAULT 'pending';
@@ -274,11 +294,13 @@ async def update_indexing_statuses():
 ### For You (User)
 
 1. **Test if deleted documents are still searchable**:
+
    - Ask your retrieval agent about "DeepSeek OCR"
    - Ask about "pasta recipe"
    - See if it finds anything
 
 2. **If documents ARE still searchable** (bug confirmed):
+
    - Need to manually clean up Vertex AI index
    - See "Manual Cleanup" section below
 
@@ -289,6 +311,7 @@ async def update_indexing_statuses():
 ### For Developer (Fixing the Code)
 
 1. **Short-term**: Increase retry attempts and window
+
    ```python
    # In deletion_queue.py
    max_attempts INT DEFAULT 60,  # Was: 10
@@ -344,13 +367,16 @@ To avoid this in the future:
 ## Questions to Answer
 
 1. **Are the "failed" documents currently searchable?**
+
    - Test by asking retrieval agent about their content
 
 2. **How long does Vertex AI indexing usually take?**
+
    - Check import operation timestamps
    - Measure time from upload to first successful search
 
 3. **Do you need instant deletion?**
+
    - Or can users wait for "Processing" to complete?
 
 4. **How often do users delete right after uploading?**

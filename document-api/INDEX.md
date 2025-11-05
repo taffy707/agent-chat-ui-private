@@ -4,20 +4,22 @@ Welcome! This is your guide to all documentation for the FastAPI Document Upload
 
 ## 🚀 Quick Links
 
-| What do you want to do? | Go here |
-|-------------------------|---------|
-| **Get started in 5 minutes** | [QUICKSTART.md](QUICKSTART.md) |
-| **Understand the architecture** | [ARCHITECTURE.md](ARCHITECTURE.md) |
-| **Read full documentation** | [README.md](README.md) |
-| **See what was built** | [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) |
-| **Start coding** | [main.py](main.py) |
+| What do you want to do?         | Go here                                  |
+| ------------------------------- | ---------------------------------------- |
+| **Get started in 5 minutes**    | [QUICKSTART.md](QUICKSTART.md)           |
+| **Understand the architecture** | [ARCHITECTURE.md](ARCHITECTURE.md)       |
+| **Read full documentation**     | [README.md](README.md)                   |
+| **See what was built**          | [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) |
+| **Start coding**                | [main.py](main.py)                       |
 
 ---
 
 ## 📖 Documentation Files
 
 ### 1. [QUICKSTART.md](QUICKSTART.md) ⚡
+
 **5-minute setup guide**
+
 - Ultra-fast setup if you already have GCP configured
 - Step-by-step from scratch
 - Quick testing commands
@@ -29,7 +31,9 @@ Welcome! This is your guide to all documentation for the FastAPI Document Upload
 ---
 
 ### 2. [README.md](README.md) 📘
+
 **Complete documentation (15,000+ words)**
+
 - What this does & why
 - Architecture diagram
 - Features list
@@ -47,7 +51,9 @@ Welcome! This is your guide to all documentation for the FastAPI Document Upload
 ---
 
 ### 3. [ARCHITECTURE.md](ARCHITECTURE.md) 🏗️
+
 **System architecture & design**
+
 - System architecture diagram
 - Request flow
 - Component interactions
@@ -63,7 +69,9 @@ Welcome! This is your guide to all documentation for the FastAPI Document Upload
 ---
 
 ### 4. [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) 📦
+
 **What was built & why**
+
 - Features delivered
 - Project structure
 - How it works
@@ -81,9 +89,11 @@ Welcome! This is your guide to all documentation for the FastAPI Document Upload
 ---
 
 ### 5. [.env.example](.env.example) ⚙️
+
 **Configuration template**
+
 - All required environment variables
-- Your specific values (metatask-*)
+- Your specific values (metatask-\*)
 - Optional settings
 - Comments explaining each setting
 
@@ -96,7 +106,9 @@ Welcome! This is your guide to all documentation for the FastAPI Document Upload
 ### Core Application Files
 
 #### [main.py](main.py)
+
 **FastAPI application (450+ lines)**
+
 - `/upload` endpoint - Upload documents
 - `/health` endpoint - Health checks
 - `/operation/{name}` endpoint - Check import status
@@ -105,6 +117,7 @@ Welcome! This is your guide to all documentation for the FastAPI Document Upload
 - Logging
 
 **Key functions:**
+
 - `upload_documents()` - Main upload handler
 - `validate_file()` - File validation
 - `check_operation_status()` - Import status
@@ -112,25 +125,31 @@ Welcome! This is your guide to all documentation for the FastAPI Document Upload
 ---
 
 #### [config.py](config.py)
+
 **Configuration management (50 lines)**
+
 - Environment variable loading
 - Settings validation
 - Type hints with Pydantic
 - Default values
 
 **Key class:**
+
 - `Settings(BaseSettings)` - Application config
 
 ---
 
 #### [gcs_uploader.py](gcs_uploader.py)
+
 **Google Cloud Storage operations (100+ lines)**
+
 - Upload files to GCS
 - Generate unique filenames with UUIDs
 - Delete files
 - Bucket management
 
 **Key class & methods:**
+
 - `GCSUploader` class
   - `upload_file()` - Upload with unique name
   - `generate_unique_filename()` - UUID prefixes
@@ -140,13 +159,16 @@ Welcome! This is your guide to all documentation for the FastAPI Document Upload
 ---
 
 #### [vertex_ai_importer.py](vertex_ai_importer.py)
+
 **Vertex AI Search integration (150+ lines)**
+
 - Trigger document imports
 - INCREMENTAL reconciliation mode
 - Operation status checking
 - Long-running operation handling
 
 **Key class & methods:**
+
 - `VertexAIImporter` class
   - `import_documents_from_gcs()` - Trigger import
   - `check_operation_status()` - Poll status
@@ -156,13 +178,16 @@ Welcome! This is your guide to all documentation for the FastAPI Document Upload
 ### Supporting Files
 
 #### [test_upload.py](test_upload.py)
+
 **Testing utility (100 lines)**
+
 - Command-line test script
 - Health check validation
 - Upload testing
 - Response parsing
 
 **Usage:**
+
 ```bash
 python test_upload.py document.pdf
 ```
@@ -170,7 +195,9 @@ python test_upload.py document.pdf
 ---
 
 #### [setup.sh](setup.sh)
+
 **Automated setup script (80 lines)**
+
 - Check Python installation
 - Create virtual environment
 - Install dependencies
@@ -178,6 +205,7 @@ python test_upload.py document.pdf
 - Check authentication
 
 **Usage:**
+
 ```bash
 ./setup.sh
 ```
@@ -185,7 +213,9 @@ python test_upload.py document.pdf
 ---
 
 #### [Dockerfile](Dockerfile)
+
 **Container definition**
+
 - Python 3.11 slim base
 - Dependencies installation
 - Health check
@@ -193,6 +223,7 @@ python test_upload.py document.pdf
 - Production command
 
 **Usage:**
+
 ```bash
 docker build -t vertex-ai-upload .
 docker run -p 8080:8080 --env-file .env vertex-ai-upload
@@ -201,13 +232,16 @@ docker run -p 8080:8080 --env-file .env vertex-ai-upload
 ---
 
 #### [requirements.txt](requirements.txt)
+
 **Python dependencies**
+
 - FastAPI & uvicorn
 - Google Cloud libraries
 - Pydantic for config
 - Development tools
 
 **Install:**
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -215,9 +249,11 @@ pip install -r requirements.txt
 ---
 
 #### [.gitignore](.gitignore)
+
 **Git ignore rules**
+
 - Environment files (.env)
-- Service account keys (*.json)
+- Service account keys (\*.json)
 - Python artifacts
 - IDE files
 - OS files
@@ -227,6 +263,7 @@ pip install -r requirements.txt
 ## 🎯 Usage Scenarios
 
 ### Scenario 1: "I just want to see if this works"
+
 1. Read: [QUICKSTART.md](QUICKSTART.md)
 2. Run: `./setup.sh`
 3. Edit: `.env`
@@ -236,6 +273,7 @@ pip install -r requirements.txt
 ---
 
 ### Scenario 2: "I need to understand the code"
+
 1. Read: [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)
 2. Read: [ARCHITECTURE.md](ARCHITECTURE.md)
 3. Review: [main.py](main.py)
@@ -245,6 +283,7 @@ pip install -r requirements.txt
 ---
 
 ### Scenario 3: "I need to deploy to production"
+
 1. Read: [README.md](README.md) → Deployment section
 2. Review: [Dockerfile](Dockerfile)
 3. Configure: Production environment variables
@@ -254,6 +293,7 @@ pip install -r requirements.txt
 ---
 
 ### Scenario 4: "I want to add features"
+
 1. Read: [ARCHITECTURE.md](ARCHITECTURE.md)
 2. Review: Existing code structure
 3. Add: New module or extend existing
@@ -263,6 +303,7 @@ pip install -r requirements.txt
 ---
 
 ### Scenario 5: "Something is broken"
+
 1. Check: [README.md](README.md) → Troubleshooting
 2. Check: [QUICKSTART.md](QUICKSTART.md) → Common Issues
 3. Check: Application logs
@@ -276,24 +317,29 @@ pip install -r requirements.txt
 ### Finding Specific Functionality
 
 **Upload Handling:**
+
 - Endpoint: [main.py](main.py) → `upload_documents()`
 - Validation: [main.py](main.py) → `validate_file()`
 - GCS upload: [gcs_uploader.py](gcs_uploader.py) → `upload_file()`
 
 **Configuration:**
+
 - Loading: [config.py](config.py) → `Settings` class
 - Environment: [.env.example](.env.example)
 
 **Vertex AI Integration:**
+
 - Import trigger: [vertex_ai_importer.py](vertex_ai_importer.py) → `import_documents_from_gcs()`
 - Status check: [vertex_ai_importer.py](vertex_ai_importer.py) → `check_operation_status()`
 
 **Error Handling:**
+
 - Validation errors: [main.py](main.py) → `validate_file()`
 - Upload errors: [main.py](main.py) → `upload_documents()` try/except blocks
 - Response errors: [main.py](main.py) → HTTPException raises
 
 **Testing:**
+
 - Test script: [test_upload.py](test_upload.py)
 - Health check: [main.py](main.py) → `health_check()`
 
@@ -318,6 +364,7 @@ Breakdown:
 ## 🗺️ Learning Path
 
 ### Beginner
+
 1. ✅ Read [QUICKSTART.md](QUICKSTART.md)
 2. ✅ Run `./setup.sh`
 3. ✅ Start server and test upload
@@ -325,6 +372,7 @@ Breakdown:
 5. ✅ Read [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md)
 
 ### Intermediate
+
 1. ✅ Read [README.md](README.md) fully
 2. ✅ Review [main.py](main.py) code
 3. ✅ Understand [ARCHITECTURE.md](ARCHITECTURE.md)
@@ -332,6 +380,7 @@ Breakdown:
 5. ✅ Add custom validation logic
 
 ### Advanced
+
 1. ✅ Study all code files
 2. ✅ Add new features (metadata, webhooks)
 3. ✅ Deploy to Cloud Run
@@ -343,6 +392,7 @@ Breakdown:
 ## 🎓 Key Concepts
 
 ### FastAPI Concepts
+
 - **Async endpoints** - Non-blocking I/O
 - **File uploads** - UploadFile handling
 - **Response models** - Pydantic validation
@@ -352,6 +402,7 @@ Breakdown:
 **Learn in:** [main.py](main.py)
 
 ### Google Cloud Concepts
+
 - **Cloud Storage** - Object storage
 - **Vertex AI Search** - Document indexing
 - **Service accounts** - Authentication
@@ -360,6 +411,7 @@ Breakdown:
 **Learn in:** [gcs_uploader.py](gcs_uploader.py), [vertex_ai_importer.py](vertex_ai_importer.py)
 
 ### Design Patterns
+
 - **Configuration pattern** - Settings class
 - **Service layer** - Business logic separation
 - **Error accumulation** - Continue on partial failures
@@ -374,6 +426,7 @@ Breakdown:
 ### Add New File Type
 
 **Where:** [config.py](config.py)
+
 ```python
 ALLOWED_EXTENSIONS = [".pdf", ".docx", ".txt", ".html", ".new"]
 ALLOWED_MIME_TYPES = ["...", "application/new-type"]
@@ -382,6 +435,7 @@ ALLOWED_MIME_TYPES = ["...", "application/new-type"]
 ### Change Upload Size Limit
 
 **Where:** [.env](.env)
+
 ```env
 MAX_FILE_SIZE=67108864  # 64MB
 ```
@@ -389,6 +443,7 @@ MAX_FILE_SIZE=67108864  # 64MB
 ### Add Metadata Support
 
 **Where:** [main.py](main.py)
+
 - Add metadata field to upload endpoint
 - Pass to `gcs_uploader.upload_file()`
 - Create JSONL format like in repository examples
@@ -396,6 +451,7 @@ MAX_FILE_SIZE=67108864  # 64MB
 ### Add Authentication
 
 **Where:** [main.py](main.py)
+
 ```python
 from fastapi.security import HTTPBearer
 
@@ -409,6 +465,7 @@ async def upload_documents(...):
 ### Add Webhook Notifications
 
 **Where:** New file `webhooks.py` + [main.py](main.py)
+
 - Create webhook sender
 - Call after successful upload
 - Include document IDs and status
@@ -418,12 +475,14 @@ async def upload_documents(...):
 ## 💡 Tips & Tricks
 
 ### Development
+
 - Use `--reload` flag for hot reloading
 - Check logs for detailed error info
 - Use `/docs` for interactive testing
 - Test with small files first
 
 ### Production
+
 - Use service account authentication
 - Set up Cloud Monitoring
 - Enable Cloud Logging
@@ -431,6 +490,7 @@ async def upload_documents(...):
 - Set memory/CPU limits
 
 ### Debugging
+
 - Check health endpoint first
 - Verify .env configuration
 - Test GCS access separately
@@ -442,6 +502,7 @@ async def upload_documents(...):
 ## 📞 Getting Help
 
 ### Order of Operations
+
 1. Check: [QUICKSTART.md](QUICKSTART.md) → Common Issues
 2. Check: [README.md](README.md) → Troubleshooting
 3. Review: Application logs
@@ -449,6 +510,7 @@ async def upload_documents(...):
 5. Search: Error messages in docs
 
 ### Useful Commands
+
 ```bash
 # Check health
 curl http://localhost:8000/health

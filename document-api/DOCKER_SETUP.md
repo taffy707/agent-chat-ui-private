@@ -29,6 +29,7 @@ That's it! The API will be running at **http://localhost:8000**
 When you run `./docker-start.sh`, Docker Compose will:
 
 1. **Start PostgreSQL database** (in a container)
+
    - Port: 5433 (mapped to avoid conflicts with local PostgreSQL)
    - Data is persisted in a Docker volume
 
@@ -206,12 +207,14 @@ docker-compose down -v
 ### For Frontend Development
 
 1. **Start the backend once**:
+
    ```bash
    cd document-api
    ./docker-start.sh
    ```
 
 2. **Start the frontend** (in another terminal):
+
    ```bash
    cd agent-chat-ui
    pnpm dev
@@ -232,6 +235,7 @@ If you're making changes to the backend code:
 1. **Make your changes** to Python files
 
 2. **Rebuild and restart**:
+
    ```bash
    docker-compose up -d --build
    ```
@@ -323,13 +327,13 @@ docker-compose down -v --rmi all
 
 ## Quick Reference
 
-| Command | Description |
-|---------|-------------|
-| `./docker-start.sh` | Start everything |
-| `./docker-stop.sh` | Stop everything |
-| `docker-compose logs -f` | View logs |
-| `docker-compose ps` | Check status |
-| `docker-compose down -v` | Reset everything |
+| Command                        | Description         |
+| ------------------------------ | ------------------- |
+| `./docker-start.sh`            | Start everything    |
+| `./docker-stop.sh`             | Stop everything     |
+| `docker-compose logs -f`       | View logs           |
+| `docker-compose ps`            | Check status        |
+| `docker-compose down -v`       | Reset everything    |
 | `docker-compose up -d --build` | Rebuild and restart |
 
 ---

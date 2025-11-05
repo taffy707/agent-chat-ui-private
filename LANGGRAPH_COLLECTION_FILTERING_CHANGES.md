@@ -1,10 +1,13 @@
 # LangGraph Collection Filtering Implementation Guide
 
 ## Overview
+
 This document describes the changes made to the LangGraph retrieval agent to support filtering search results by collection IDs. This allows users to select specific document collections to search, rather than searching all collections.
 
 ## Problem Statement
+
 The original LangGraph retrieval agent would search across all documents for a user without the ability to filter by specific collections. We needed to add the ability to:
+
 1. Accept a list of collection IDs from the frontend
 2. Filter Vertex AI Search results to only return documents from selected collections
 3. Maintain backward compatibility (if no collections specified, search all)
@@ -12,6 +15,7 @@ The original LangGraph retrieval agent would search across all documents for a u
 ## Architecture Context
 
 ### Frontend to Backend Flow
+
 ```
 User selects collections in UI
     ↓
@@ -52,6 +56,7 @@ collection_ids: list[str] = field(
 ```
 
 **Context**:
+
 - This field receives the collection IDs passed from the frontend via the message context
 - It defaults to an empty list `[]` for backward compatibility
 - The frontend sends this as: `{"user_id": "default-user", "collection_ids": ["id1", "id2"]}`
@@ -67,6 +72,7 @@ collection_ids: list[str] = field(
 **What to modify**: The Vertex AI Search retriever configuration to include metadata filters.
 
 #### Original Code (Approximate)
+
 ```python
 def make_vertex_ai_retriever(configuration: IndexConfiguration):
     # ... other code ...
@@ -142,24 +148,31 @@ def make_vertex_ai_retriever(configuration: IndexConfiguration):
 Understanding the filter syntax is crucial. Here are examples of what the final filter looks like:
 
 ### Example 1: User filter only (no collections selected)
+
 ```
 user_id: ANY("default-user")
 ```
+
 **Behavior**: Returns all documents for this user across all collections
 
 ### Example 2: User filter + Single collection
+
 ```
 user_id: ANY("default-user") AND collection_id: ANY("collection-123")
 ```
+
 **Behavior**: Returns documents only from collection-123 for this user
 
 ### Example 3: User filter + Multiple collections
+
 ```
 user_id: ANY("default-user") AND (collection_id: ANY("collection-123") OR collection_id: ANY("collection-456"))
 ```
+
 **Behavior**: Returns documents from collection-123 OR collection-456 for this user
 
 ### Example 4: Collections only (if user filter disabled)
+
 ```
 (collection_id: ANY("collection-123") OR collection_id: ANY("collection-456"))
 ```
@@ -175,7 +188,7 @@ The frontend sends the following context with each message:
 const context = {
   ...artifactContext,
   user_id: "default-user",
-  collection_ids: selectedCollectionIds,  // Array of collection IDs
+  collection_ids: selectedCollectionIds, // Array of collection IDs
 };
 
 stream.sendMessage({
@@ -185,6 +198,7 @@ stream.sendMessage({
 ```
 
 **Important**: The `collection_ids` is an array that can be:
+
 - Empty `[]` - means search ALL collections
 - Single item `["id1"]` - search only one collection
 - Multiple items `["id1", "id2", "id3"]` - search specific collections
@@ -194,21 +208,26 @@ stream.sendMessage({
 ## Testing the Implementation
 
 ### Test Case 1: No Collections Selected
+
 **Frontend sends**: `collection_ids: []`
 **Expected filter**: `user_id: ANY("default-user")`
 **Expected behavior**: Search all collections
 
 ### Test Case 2: One Collection Selected
+
 **Frontend sends**: `collection_ids: ["abc-123"]`
 **Expected filter**: `user_id: ANY("default-user") AND collection_id: ANY("abc-123")`
 **Expected behavior**: Search only collection abc-123
 
 ### Test Case 3: Multiple Collections Selected
+
 **Frontend sends**: `collection_ids: ["abc-123", "def-456"]`
 **Expected filter**:
+
 ```
 user_id: ANY("default-user") AND (collection_id: ANY("abc-123") OR collection_id: ANY("def-456"))
 ```
+
 **Expected behavior**: Search collections abc-123 and def-456
 
 ---
@@ -223,12 +242,13 @@ user_id: ANY("default-user") AND (collection_id: ANY("abc-123") OR collection_id
 These fields must be indexed as **filterable** in your Vertex AI Search data schema.
 
 ### Example Document Metadata
+
 ```json
 {
   "id": "doc-123",
   "content": "Document content here...",
   "user_id": "default-user",
-  "collection_id": "research-papers",
+  "collection_id": "research-papers"
   // ... other metadata
 }
 ```
@@ -238,23 +258,29 @@ These fields must be indexed as **filterable** in your Vertex AI Search data sch
 ## Common Issues & Debugging
 
 ### Issue 1: Filter Not Working
+
 **Symptom**: All documents returned regardless of collection selection
 **Check**:
+
 1. Verify `collection_ids` is being passed in configuration
 2. Add logging: `print(f"Filter expression: {filter_expr}")`
 3. Verify metadata fields exist in Vertex AI Search
 4. Check field names match exactly (`collection_id` vs `collectionId`)
 
 ### Issue 2: No Results When Collections Selected
+
 **Symptom**: No results when collections are selected, but works without selection
 **Check**:
+
 1. Verify documents have `collection_id` metadata
 2. Verify the collection IDs match exactly (case-sensitive)
 3. Check Vertex AI Search schema has `collection_id` as filterable field
 
 ### Issue 3: Syntax Errors in Filter
+
 **Symptom**: Vertex AI Search returns error about filter syntax
 **Check**:
+
 1. Verify filter follows Vertex AI Search syntax: `field: ANY("value")`
 2. Ensure OR conditions are wrapped in parentheses
 3. Check for proper quote escaping
@@ -264,17 +290,21 @@ These fields must be indexed as **filterable** in your Vertex AI Search data sch
 ## Additional Notes
 
 ### Backward Compatibility
+
 The implementation maintains backward compatibility:
+
 - If `collection_ids` field doesn't exist in config → searches all collections
 - If `collection_ids` is empty array → searches all collections
 - Existing code without collection filtering continues to work
 
 ### Performance Considerations
+
 - Filtering at the Vertex AI Search level is more efficient than filtering results in code
 - Using metadata filters reduces the number of documents returned
 - Multiple collection filters use OR logic (union of results)
 
 ### Security Considerations
+
 - Always include `user_id` filter to prevent cross-user data access
 - Validate collection IDs belong to the requesting user (if implementing server-side)
 - Consider rate limiting collection selection (e.g., max 10 collections)
@@ -318,6 +348,7 @@ docker-compose up -d
 ## Questions to Verify Implementation
 
 When re-implementing, confirm:
+
 1. ✅ Does your configuration class accept `collection_ids: list[str]`?
 2. ✅ Does your Vertex AI retriever support `filter` parameter in search_kwargs?
 3. ✅ Are your documents in Vertex AI Search indexed with `collection_id` metadata?

@@ -129,9 +129,9 @@ import {
   DeleteCollectionResponse,
   DeleteDocumentResponse,
   ApiError,
-} from '@/types/api';
+} from "@/types/api";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 class ApiClient {
   private baseUrl: string;
@@ -143,7 +143,9 @@ class ApiClient {
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const error: ApiError = await response.json();
-      throw new Error(error.detail || `HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(
+        error.detail || `HTTP ${response.status}: ${response.statusText}`,
+      );
     }
     return response.json();
   }
@@ -155,15 +157,15 @@ class ApiClient {
   async createCollection(
     userId: string,
     name: string,
-    description?: string
+    description?: string,
   ): Promise<Collection> {
     const formData = new FormData();
-    formData.append('user_id', userId);
-    formData.append('name', name);
-    if (description) formData.append('description', description);
+    formData.append("user_id", userId);
+    formData.append("name", name);
+    if (description) formData.append("description", description);
 
     const response = await fetch(`${this.baseUrl}/collections`, {
-      method: 'POST',
+      method: "POST",
       body: formData,
     });
 
@@ -172,7 +174,7 @@ class ApiClient {
 
   async listCollections(
     userId: string,
-    options?: { limit?: number; offset?: number }
+    options?: { limit?: number; offset?: number },
   ): Promise<CollectionsResponse> {
     const params = new URLSearchParams({
       user_id: userId,
@@ -184,22 +186,25 @@ class ApiClient {
     return this.handleResponse<CollectionsResponse>(response);
   }
 
-  async getCollection(collectionId: string, userId: string): Promise<Collection> {
+  async getCollection(
+    collectionId: string,
+    userId: string,
+  ): Promise<Collection> {
     const params = new URLSearchParams({ user_id: userId });
     const response = await fetch(
-      `${this.baseUrl}/collections/${collectionId}?${params}`
+      `${this.baseUrl}/collections/${collectionId}?${params}`,
     );
     return this.handleResponse<Collection>(response);
   }
 
   async deleteCollection(
     collectionId: string,
-    userId: string
+    userId: string,
   ): Promise<DeleteCollectionResponse> {
     const params = new URLSearchParams({ user_id: userId });
     const response = await fetch(
       `${this.baseUrl}/collections/${collectionId}?${params}`,
-      { method: 'DELETE' }
+      { method: "DELETE" },
     );
     return this.handleResponse<DeleteCollectionResponse>(response);
   }
@@ -211,18 +216,18 @@ class ApiClient {
   async uploadDocuments(
     userId: string,
     collectionId: string,
-    files: File[]
+    files: File[],
   ): Promise<UploadResponse> {
     const formData = new FormData();
-    formData.append('user_id', userId);
-    formData.append('collection_id', collectionId);
+    formData.append("user_id", userId);
+    formData.append("collection_id", collectionId);
 
     files.forEach((file) => {
-      formData.append('files', file);
+      formData.append("files", file);
     });
 
     const response = await fetch(`${this.baseUrl}/upload`, {
-      method: 'POST',
+      method: "POST",
       body: formData,
     });
 
@@ -232,7 +237,7 @@ class ApiClient {
   async listCollectionDocuments(
     collectionId: string,
     userId: string,
-    options?: { limit?: number; offset?: number }
+    options?: { limit?: number; offset?: number },
   ): Promise<DocumentsResponse> {
     const params = new URLSearchParams({
       user_id: userId,
@@ -241,14 +246,14 @@ class ApiClient {
     });
 
     const response = await fetch(
-      `${this.baseUrl}/collections/${collectionId}/documents?${params}`
+      `${this.baseUrl}/collections/${collectionId}/documents?${params}`,
     );
     return this.handleResponse<DocumentsResponse>(response);
   }
 
   async listAllDocuments(
     userId: string,
-    options?: { limit?: number; offset?: number; status?: string }
+    options?: { limit?: number; offset?: number; status?: string },
   ): Promise<DocumentsResponse> {
     const params = new URLSearchParams({
       user_id: userId,
@@ -257,7 +262,7 @@ class ApiClient {
     });
 
     if (options?.status) {
-      params.append('status', options.status);
+      params.append("status", options.status);
     }
 
     const response = await fetch(`${this.baseUrl}/documents?${params}`);
@@ -266,12 +271,12 @@ class ApiClient {
 
   async deleteDocument(
     documentId: string,
-    userId: string
+    userId: string,
   ): Promise<DeleteDocumentResponse> {
     const params = new URLSearchParams({ user_id: userId });
     const response = await fetch(
       `${this.baseUrl}/documents/${documentId}?${params}`,
-      { method: 'DELETE' }
+      { method: "DELETE" },
     );
     return this.handleResponse<DeleteDocumentResponse>(response);
   }
@@ -516,9 +521,9 @@ export default function DocumentManager({ userId }: DocumentManagerProps) {
 ```typescript
 // hooks/useCollections.ts
 
-import { useState, useCallback } from 'react';
-import { apiClient } from '@/lib/apiClient';
-import { Collection } from '@/types/api';
+import { useState, useCallback } from "react";
+import { apiClient } from "@/lib/apiClient";
+import { Collection } from "@/types/api";
 
 export function useCollections(userId: string) {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -543,7 +548,7 @@ export function useCollections(userId: string) {
       await apiClient.createCollection(userId, name, description);
       await loadCollections();
     },
-    [userId, loadCollections]
+    [userId, loadCollections],
   );
 
   const deleteCollection = useCallback(
@@ -551,7 +556,7 @@ export function useCollections(userId: string) {
       await apiClient.deleteCollection(collectionId, userId);
       await loadCollections();
     },
-    [userId, loadCollections]
+    [userId, loadCollections],
   );
 
   return {
@@ -568,9 +573,9 @@ export function useCollections(userId: string) {
 ```typescript
 // hooks/useDocuments.ts
 
-import { useState, useCallback } from 'react';
-import { apiClient } from '@/lib/apiClient';
-import { Document } from '@/types/api';
+import { useState, useCallback } from "react";
+import { apiClient } from "@/lib/apiClient";
+import { Document } from "@/types/api";
 
 export function useDocuments(userId: string) {
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -582,7 +587,10 @@ export function useDocuments(userId: string) {
       try {
         setLoading(true);
         setError(null);
-        const response = await apiClient.listCollectionDocuments(collectionId, userId);
+        const response = await apiClient.listCollectionDocuments(
+          collectionId,
+          userId,
+        );
         setDocuments(response.documents);
       } catch (err) {
         setError(err as Error);
@@ -590,7 +598,7 @@ export function useDocuments(userId: string) {
         setLoading(false);
       }
     },
-    [userId]
+    [userId],
   );
 
   const uploadDocuments = useCallback(
@@ -598,7 +606,7 @@ export function useDocuments(userId: string) {
       await apiClient.uploadDocuments(userId, collectionId, files);
       await loadDocuments(collectionId);
     },
-    [userId, loadDocuments]
+    [userId, loadDocuments],
   );
 
   const deleteDocument = useCallback(
@@ -606,7 +614,7 @@ export function useDocuments(userId: string) {
       await apiClient.deleteDocument(documentId, userId);
       await loadDocuments(collectionId);
     },
-    [userId, loadDocuments]
+    [userId, loadDocuments],
   );
 
   return {
@@ -633,6 +641,7 @@ NEXT_PUBLIC_API_URL=https://api.yourdomain.com
 ```
 
 For Vite:
+
 ```bash
 # .env.development
 VITE_API_URL=http://localhost:8000
@@ -642,12 +651,13 @@ VITE_API_URL=https://api.yourdomain.com
 ```
 
 Update `apiClient.ts`:
+
 ```typescript
 // For Next.js
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 // For Vite
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 ```
 
 ---
@@ -683,27 +693,27 @@ export async function uploadWithProgress(
   userId: string,
   collectionId: string,
   files: File[],
-  onProgress: (progress: number) => void
+  onProgress: (progress: number) => void,
 ): Promise<any> {
   const formData = new FormData();
-  formData.append('user_id', userId);
-  formData.append('collection_id', collectionId);
+  formData.append("user_id", userId);
+  formData.append("collection_id", collectionId);
 
   files.forEach((file) => {
-    formData.append('files', file);
+    formData.append("files", file);
   });
 
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
-    xhr.upload.addEventListener('progress', (e) => {
+    xhr.upload.addEventListener("progress", (e) => {
       if (e.lengthComputable) {
         const percentComplete = (e.loaded / e.total) * 100;
         onProgress(Math.round(percentComplete));
       }
     });
 
-    xhr.addEventListener('load', () => {
+    xhr.addEventListener("load", () => {
       if (xhr.status === 202) {
         resolve(JSON.parse(xhr.responseText));
       } else {
@@ -711,17 +721,18 @@ export async function uploadWithProgress(
       }
     });
 
-    xhr.addEventListener('error', () => {
-      reject(new Error('Network error'));
+    xhr.addEventListener("error", () => {
+      reject(new Error("Network error"));
     });
 
-    xhr.open('POST', `${process.env.NEXT_PUBLIC_API_URL}/upload`);
+    xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL}/upload`);
     xhr.send(formData);
   });
 }
 ```
 
 Usage:
+
 ```typescript
 const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -735,6 +746,7 @@ await uploadWithProgress(userId, collectionId, files, (progress) => {
 ## Quick Start Testing
 
 1. **Start your backend**:
+
 ```bash
 cd fastapi-document-upload
 source venv/bin/activate
@@ -742,14 +754,16 @@ python main.py
 ```
 
 2. **Create API client files**:
+
 ```bash
 mkdir -p src/types src/lib
 # Copy types/api.ts and lib/apiClient.ts from above
 ```
 
 3. **Test connection**:
+
 ```typescript
-import { apiClient } from '@/lib/apiClient';
+import { apiClient } from "@/lib/apiClient";
 
 // In your component or test
 const health = await apiClient.healthCheck();
@@ -757,10 +771,11 @@ console.log(health); // Should show: { status: "healthy", ... }
 ```
 
 4. **Use in components**:
-```typescript
-import { useCollections } from '@/hooks/useCollections';
 
-const { collections, loadCollections } = useCollections('alice');
+```typescript
+import { useCollections } from "@/hooks/useCollections";
+
+const { collections, loadCollections } = useCollections("alice");
 
 useEffect(() => {
   loadCollections();

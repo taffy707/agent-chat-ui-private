@@ -81,15 +81,17 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
       setSelectedCollection(newCollection);
     } catch (error) {
       toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to create collection"
+        error instanceof Error ? error.message : "Failed to create collection",
       );
     }
   };
 
   const handleDeleteCollection = async (collectionId: string) => {
-    if (!confirm("Are you sure? This will delete ALL documents in this collection.")) {
+    if (
+      !confirm(
+        "Are you sure? This will delete ALL documents in this collection.",
+      )
+    ) {
       return;
     }
 
@@ -101,7 +103,7 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete collection"
+        error instanceof Error ? error.message : "Failed to delete collection",
       );
     }
   };
@@ -123,19 +125,16 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
 
     try {
       const filesArray = Array.from(selectedFiles);
-      const response = await uploadDocuments(
-        selectedCollection.id,
-        filesArray
-      );
+      const response = await uploadDocuments(selectedCollection.id, filesArray);
       toast.success(
-        `Uploaded ${response.documents.length} file(s) successfully`
+        `Uploaded ${response.documents.length} file(s) successfully`,
       );
       setSelectedFiles(null);
       // Refresh collection to update document count
       await refreshCollection(selectedCollection.id);
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to upload files"
+        error instanceof Error ? error.message : "Failed to upload files",
       );
     }
   };
@@ -153,7 +152,7 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
       }
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete document"
+        error instanceof Error ? error.message : "Failed to delete document",
       );
     }
   };
@@ -169,21 +168,21 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
       case "indexing":
       case "pending":
         return (
-          <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+          <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-1 text-xs text-amber-600">
             <Clock className="h-3 w-3 animate-pulse" />
             Processing...
           </span>
         );
       case "indexed":
         return (
-          <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+          <span className="inline-flex items-center gap-1 rounded bg-green-50 px-2 py-1 text-xs text-green-600">
             <CheckCircle2 className="h-3 w-3" />
             Ready
           </span>
         );
       case "failed":
         return (
-          <span className="inline-flex items-center gap-1 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+          <span className="inline-flex items-center gap-1 rounded bg-red-50 px-2 py-1 text-xs text-red-600">
             <AlertCircle className="h-3 w-3" />
             Failed
           </span>
@@ -194,35 +193,39 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="p-4 border-b">
+    <div className="flex h-full flex-col">
+      <div className="border-b p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Document Manager</h2>
           {onClose && (
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+            >
               Close
             </Button>
           )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden flex">
+      <div className="flex flex-1 overflow-hidden">
         {/* Collections Sidebar */}
-        <div className="w-64 border-r flex flex-col">
-          <div className="p-4 border-b">
+        <div className="flex w-64 flex-col border-r">
+          <div className="border-b p-4">
             <Button
               variant="outline"
               size="sm"
               className="w-full"
               onClick={() => setShowNewCollectionForm(!showNewCollectionForm)}
             >
-              <FolderPlus className="h-4 w-4 mr-2" />
+              <FolderPlus className="mr-2 h-4 w-4" />
               New Collection
             </Button>
           </div>
 
           {showNewCollectionForm && (
-            <div className="p-4 border-b bg-muted/50">
+            <div className="bg-muted/50 border-b p-4">
               <Label htmlFor="collection-name">Collection Name</Label>
               <Input
                 id="collection-name"
@@ -232,8 +235,11 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
                 placeholder="Enter name..."
                 className="mt-2"
               />
-              <div className="flex gap-2 mt-2">
-                <Button size="sm" onClick={handleCreateCollection}>
+              <div className="mt-2 flex gap-2">
+                <Button
+                  size="sm"
+                  onClick={handleCreateCollection}
+                >
                   Create
                 </Button>
                 <Button
@@ -264,7 +270,7 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
             )}
 
             {!collectionsLoading && collections.length === 0 && (
-              <div className="p-4 text-sm text-muted-foreground text-center">
+              <div className="text-muted-foreground p-4 text-center text-sm">
                 No collections yet. Create one to get started.
               </div>
             )}
@@ -274,21 +280,21 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
                 <div
                   key={collection.id}
                   className={cn(
-                    "group relative p-3 rounded-md cursor-pointer hover:bg-muted transition-colors",
+                    "group hover:bg-muted relative cursor-pointer rounded-md p-3 transition-colors",
                     selectedCollection?.id === collection.id &&
-                      "bg-muted border border-border"
+                      "bg-muted border-border border",
                   )}
                   onClick={() => setSelectedCollection(collection)}
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <Folder className="h-4 w-4 flex-shrink-0" />
-                        <span className="font-medium text-sm truncate">
+                        <span className="truncate text-sm font-medium">
                           {collection.name}
                         </span>
                       </div>
-                      <div className="text-xs text-muted-foreground mt-1">
+                      <div className="text-muted-foreground mt-1 text-xs">
                         {collection.document_count} document
                         {collection.document_count !== 1 ? "s" : ""}
                       </div>
@@ -296,7 +302,7 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteCollection(collection.id);
@@ -312,18 +318,20 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
         </div>
 
         {/* Documents Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex flex-1 flex-col">
           {selectedCollection ? (
             <>
-              <div className="p-4 border-b">
-                <h3 className="font-semibold mb-4">
+              <div className="border-b p-4">
+                <h3 className="mb-4 font-semibold">
                   {selectedCollection.name}
                 </h3>
 
                 {/* Upload Area */}
                 <Card>
                   <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Upload Documents</CardTitle>
+                    <CardTitle className="text-base">
+                      Upload Documents
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -334,16 +342,16 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
                         onChange={handleFileSelect}
                       />
                       {selectedFiles && selectedFiles.length > 0 && (
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-muted-foreground text-sm">
                           {selectedFiles.length} file(s) selected
                         </div>
                       )}
                       {uploadProgress > 0 && uploadProgress < 100 && (
                         <div className="space-y-2">
-                          <div className="text-sm text-muted-foreground">
+                          <div className="text-muted-foreground text-sm">
                             Uploading: {uploadProgress}%
                           </div>
-                          <div className="w-full bg-muted rounded-full h-2">
+                          <div className="bg-muted h-2 w-full rounded-full">
                             <div
                               className="bg-primary h-2 rounded-full transition-all"
                               style={{ width: `${uploadProgress}%` }}
@@ -383,32 +391,34 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
                     <Loader2 className="h-6 w-6 animate-spin" />
                   </div>
                 ) : documents.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-muted-foreground py-8 text-center">
                     No documents in this collection yet. Upload some files to
                     get started.
                   </div>
                 ) : (
                   <div className="space-y-2">
                     {documents.map((doc) => {
-                      const isIndexing = doc.index_status === "indexing" || doc.index_status === "pending";
+                      const isIndexing =
+                        doc.index_status === "indexing" ||
+                        doc.index_status === "pending";
                       return (
                         <Card key={doc.id}>
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between">
-                              <div className="flex items-start gap-3 flex-1">
-                                <FileText className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                                <div className="flex-1 min-w-0">
+                              <div className="flex flex-1 items-start gap-3">
+                                <FileText className="mt-0.5 h-5 w-5 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
                                   <div className="flex items-center gap-2">
-                                    <div className="font-medium truncate">
+                                    <div className="truncate font-medium">
                                       {doc.original_filename}
                                     </div>
                                     {getIndexStatusBadge(doc.index_status)}
                                   </div>
-                                  <div className="text-sm text-muted-foreground mt-1">
+                                  <div className="text-muted-foreground mt-1 text-sm">
                                     {formatFileSize(doc.file_size_bytes)} •{" "}
                                     {doc.file_type}
                                   </div>
-                                  <div className="text-xs text-muted-foreground mt-1">
+                                  <div className="text-muted-foreground mt-1 text-xs">
                                     {new Date(doc.upload_date).toLocaleString()}
                                   </div>
                                 </div>
@@ -419,7 +429,7 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
                                 onClick={() =>
                                   handleDeleteDocument(
                                     doc.id,
-                                    doc.original_filename
+                                    doc.original_filename,
                                   )
                                 }
                                 disabled={isIndexing}
@@ -441,7 +451,7 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
               </div>
             </>
           ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">
+            <div className="text-muted-foreground flex h-full items-center justify-center">
               Select a collection to view documents
             </div>
           )}
