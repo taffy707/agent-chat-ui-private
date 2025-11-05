@@ -46,13 +46,12 @@ app = FastAPI(
 # Configure CORS - Allow requests from your frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # React default
-        "http://localhost:5173",  # Vite default
-        "http://localhost:4200",  # Angular default
-        # Add your production frontend URL here when deploying
-        # "https://your-frontend-domain.com"
-    ],
+    allow_origins=["*"],  # Allow all origins (for now - restrict in production)
+    # For production, replace with specific domains:
+    # allow_origins=[
+    #     "http://localhost:3000",
+    #     "https://your-app.vercel.app",
+    # ],
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, DELETE, etc.)
     allow_headers=["*"],  # Allow all headers
