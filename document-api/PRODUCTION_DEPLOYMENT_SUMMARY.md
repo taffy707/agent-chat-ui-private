@@ -23,6 +23,7 @@ Successfully deployed the Document Upload API to Google Cloud Run with Cloud SQL
 **Platform:** Managed (fully serverless)
 
 **Configuration:**
+
 - Memory: 512Mi
 - Max instances: 10
 - Timeout: 300 seconds
@@ -30,6 +31,7 @@ Successfully deployed the Document Upload API to Google Cloud Run with Cloud SQL
 - Authentication: Allow unauthenticated (public API)
 
 **Container Image:**
+
 - Registry: Google Container Registry (GCR)
 - Image: `gcr.io/metatask-461115/document-api:latest`
 - Base: Python 3.11-slim
@@ -45,11 +47,13 @@ Successfully deployed the Document Upload API to Google Cloud Run with Cloud SQL
 **Connection Name:** `metatask-461115:us-central1:document-db`
 
 **Database Created:**
+
 - Database Name: `vertex_ai_documents`
 - Root User: `postgres`
 - Root Password: `DocumentAPI2024SecurePass`
 
 **Connection Method:**
+
 - Cloud Run connects via Unix socket: `/cloudsql/metatask-461115:us-central1:document-db`
 - External connections via IP: `34.136.162.6:5432`
 
@@ -58,6 +62,7 @@ Successfully deployed the Document Upload API to Google Cloud Run with Cloud SQL
 **Tables Created:**
 
 #### Collections Table
+
 ```sql
 CREATE TABLE collections (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -71,10 +76,12 @@ CREATE TABLE collections (
 ```
 
 **Indexes:**
+
 - `idx_collections_user_id` on `user_id`
 - `idx_collections_created_at` on `created_at DESC`
 
 #### Documents Table
+
 ```sql
 CREATE TABLE documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -98,6 +105,7 @@ CREATE TABLE documents (
 ```
 
 **Indexes:**
+
 - `documents_pkey` PRIMARY KEY on `id`
 - `documents_vertex_ai_doc_id_key` UNIQUE on `vertex_ai_doc_id`
 - `idx_documents_user_id` on `user_id`
@@ -109,9 +117,11 @@ CREATE TABLE documents (
 - `idx_documents_user_id_upload_date` on `(user_id, upload_date DESC)`
 
 **Foreign Keys:**
+
 - `documents.collection_id` → `collections.id` (ON DELETE CASCADE)
 
 **Triggers:**
+
 - `update_collections_updated_at` - Auto-updates `updated_at` on UPDATE
 - `update_documents_updated_at` - Auto-updates `updated_at` on UPDATE
 
@@ -141,6 +151,7 @@ POSTGRES_DB=vertex_ai_documents
 ## Google Cloud Services Used
 
 ### Services Enabled:
+
 1. **Cloud Run** - Serverless container hosting
 2. **Cloud SQL Admin API** - PostgreSQL database management
 3. **Container Registry API** - Docker image storage
@@ -149,6 +160,7 @@ POSTGRES_DB=vertex_ai_documents
 6. **Cloud Storage API** - Document file storage (already enabled)
 
 ### Existing Resources Utilized:
+
 - **Vertex AI Data Store:** `metatask_1761751621392` (location: global)
 - **GCS Bucket:** `metatask-documents-bucket` (location: US multi-region)
 
@@ -157,6 +169,7 @@ POSTGRES_DB=vertex_ai_documents
 ## Deployment Process
 
 ### Step 1: Environment Setup
+
 ```bash
 # Authenticated as: bwakura16@gmail.com
 # Project: metatask-461115
@@ -170,6 +183,7 @@ gcloud services enable \
 ```
 
 ### Step 2: Cloud SQL Database Creation
+
 ```bash
 # Created PostgreSQL instance (took ~7 minutes)
 gcloud sql instances create document-db \
@@ -184,6 +198,7 @@ gcloud sql databases create vertex_ai_documents \
 ```
 
 ### Step 3: Docker Image Build
+
 ```bash
 # Built and pushed container image (took ~1 minute)
 cd document-api
@@ -194,6 +209,7 @@ gcloud builds submit --tag gcr.io/metatask-461115/document-api
 ```
 
 ### Step 4: Initial Cloud Run Deployment
+
 ```bash
 gcloud run deploy document-api \
     --image gcr.io/metatask-461115/document-api \
@@ -224,15 +240,18 @@ gcloud run deploy document-api \
 ### Issue 1: Missing Database Columns
 
 **Problem:**
+
 - Documents were uploading to GCS and Vertex AI successfully
 - Document metadata was NOT being saved to PostgreSQL
 - Error in logs: `column "import_operation_id" of relation "documents" does not exist`
 
 **Root Cause:**
+
 - Database schema was initialized but migration `001_add_index_status.sql` was never run
 - Missing columns: `index_status`, `import_operation_id`, `index_completed_at`
 
 **Fix Applied:**
+
 ```bash
 # Connected to Cloud SQL and added missing columns
 gcloud sql connect document-db --user=postgres --database=vertex_ai_documents
@@ -251,10 +270,12 @@ CREATE INDEX IF NOT EXISTS idx_documents_index_status ON documents(index_status)
 ### Issue 2: Wrong GCS Bucket Configuration
 
 **Problem:**
+
 - API was configured to use `metatask-documents-upload-bucket`
 - Correct bucket is `metatask-documents-bucket`
 
 **Fix Applied:**
+
 ```bash
 # Updated Cloud Run environment variable
 gcloud run services update document-api \
@@ -273,6 +294,7 @@ gcloud run services update document-api \
 Base URL: `https://document-api-169798107925.us-central1.run.app`
 
 ### Health Check
+
 ```
 GET /health
 Response: {
@@ -284,12 +306,14 @@ Response: {
 ```
 
 ### API Documentation
+
 ```
 GET /docs
 Interactive Swagger UI documentation
 ```
 
 ### Upload Documents
+
 ```
 POST /upload
 Content-Type: multipart/form-data
@@ -304,6 +328,7 @@ Response: 202 Accepted
 ```
 
 ### Collections
+
 ```
 GET /collections?user_id={user_id}
 POST /collections
@@ -312,6 +337,7 @@ DELETE /collections/{collection_id}?user_id={user_id}
 ```
 
 ### Documents
+
 ```
 GET /collections/{collection_id}/documents?user_id={user_id}
 DELETE /documents/{document_id}?user_id={user_id}
@@ -335,6 +361,7 @@ NEXT_PUBLIC_DOCUMENT_API_URL=https://document-api-169798107925.us-central1.run.a
 ### Monthly Estimated Costs
 
 **Cloud Run (Serverless):**
+
 - First 2M requests: FREE (covered by free tier)
 - After: $0.00002400 per request
 - 360,000 GB-seconds/month: FREE
@@ -342,19 +369,23 @@ NEXT_PUBLIC_DOCUMENT_API_URL=https://document-api-169798107925.us-central1.run.a
 - **Estimated:** $0-15/month (depending on traffic)
 
 **Cloud SQL (db-f1-micro):**
+
 - Shared-core instance: ~$7.665/month
 - Storage (10 GB SSD): ~$1.70/month
 - **Estimated:** ~$9.37/month
 
 **Cloud Storage (Already provisioned):**
+
 - metatask-documents-bucket: $0.020/GB/month
 - **No additional cost** (already in use)
 
 **Container Registry:**
+
 - First 0.5 GB storage: FREE
 - **No additional cost** (under free tier)
 
 **Cloud Build:**
+
 - First 120 build-minutes/day: FREE
 - **No additional cost** (under free tier)
 
@@ -370,6 +401,7 @@ NEXT_PUBLIC_DOCUMENT_API_URL=https://document-api-169798107925.us-central1.run.a
 ### Database Access
 
 **From Local Machine:**
+
 ```bash
 # Install Cloud SQL Proxy (one-time)
 gcloud sql connect document-db --user=postgres --database=vertex_ai_documents
@@ -377,12 +409,14 @@ gcloud sql connect document-db --user=postgres --database=vertex_ai_documents
 ```
 
 **Direct Connection (after IP allowlist):**
+
 ```bash
 psql -h 34.136.162.6 -U postgres -d vertex_ai_documents
 # Password: DocumentAPI2024SecurePass
 ```
 
 **Connection String:**
+
 ```
 postgresql://postgres:DocumentAPI2024SecurePass@34.136.162.6:5432/vertex_ai_documents
 ```
@@ -390,16 +424,19 @@ postgresql://postgres:DocumentAPI2024SecurePass@34.136.162.6:5432/vertex_ai_docu
 ### Cloud Run Service
 
 **View Logs:**
+
 ```bash
 gcloud run services logs read document-api --region us-central1 --limit 100
 ```
 
 **Update Service:**
+
 ```bash
 gcloud run services update document-api --region us-central1 [options]
 ```
 
 **View Service Details:**
+
 ```bash
 gcloud run services describe document-api --region us-central1
 ```
@@ -409,6 +446,7 @@ gcloud run services describe document-api --region us-central1
 ## Monitoring & Logs
 
 ### View Cloud Run Logs
+
 ```bash
 # Stream logs in real-time
 gcloud run services logs tail document-api --region us-central1
@@ -421,6 +459,7 @@ https://console.cloud.google.com/run/detail/us-central1/document-api/logs
 ```
 
 ### View Cloud SQL Logs
+
 ```bash
 gcloud sql operations list --instance=document-db
 ```
@@ -447,6 +486,7 @@ https://console.cloud.google.com/storage/browser/metatask-documents-bucket
 
 1. **Make code changes locally**
 2. **Build and push new image:**
+
    ```bash
    cd document-api
    gcloud builds submit --tag gcr.io/metatask-461115/document-api
@@ -490,6 +530,7 @@ gcloud run services update-traffic document-api \
 ### Current Security Posture
 
 ✅ **In Place:**
+
 - HTTPS enabled by default (Cloud Run)
 - Database connection via private Unix socket
 - Environment secrets stored in Cloud Run (not in code)
@@ -497,6 +538,7 @@ gcloud run services update-traffic document-api \
 - CORS configured for frontend domain
 
 ⚠️ **Recommended Improvements:**
+
 1. **API Authentication** - Add API key or OAuth
 2. **Rate Limiting** - Prevent abuse
 3. **Secret Manager** - Store passwords in Google Secret Manager
@@ -514,16 +556,19 @@ See `DEPLOYMENT.md` for code examples to add API key authentication.
 ### Database Backups
 
 **Automated Backups (Enabled by default):**
+
 - Cloud SQL automatically backs up daily
 - Retention: 7 days
 - Binary logging enabled for point-in-time recovery
 
 **Manual Backup:**
+
 ```bash
 gcloud sql backups create --instance=document-db
 ```
 
 **Restore from Backup:**
+
 ```bash
 # List backups
 gcloud sql backups list --instance=document-db
@@ -547,11 +592,13 @@ gcloud sql export sql document-db gs://metatask-documents-bucket/backups/$(date 
 ### API Not Responding
 
 1. **Check Cloud Run status:**
+
    ```bash
    gcloud run services describe document-api --region us-central1
    ```
 
 2. **Check recent logs:**
+
    ```bash
    gcloud run services logs read document-api --region us-central1 --limit 50
    ```
@@ -564,11 +611,13 @@ gcloud sql export sql document-db gs://metatask-documents-bucket/backups/$(date 
 ### Database Connection Issues
 
 1. **Verify instance is running:**
+
    ```bash
    gcloud sql instances describe document-db
    ```
 
 2. **Test connection:**
+
    ```bash
    gcloud sql connect document-db --user=postgres --database=vertex_ai_documents
    ```
@@ -593,6 +642,7 @@ gcloud sql export sql document-db gs://metatask-documents-bucket/backups/$(date 
 ## Performance Tuning
 
 ### Current Configuration
+
 - Max instances: 10
 - Memory: 512Mi
 - Timeout: 300s
@@ -601,6 +651,7 @@ gcloud sql export sql document-db gs://metatask-documents-bucket/backups/$(date 
 ### Optimization Options
 
 **Increase Memory (if needed):**
+
 ```bash
 gcloud run services update document-api \
     --region us-central1 \
@@ -608,6 +659,7 @@ gcloud run services update document-api \
 ```
 
 **Increase CPU (always allocated):**
+
 ```bash
 gcloud run services update document-api \
     --region us-central1 \
@@ -616,6 +668,7 @@ gcloud run services update document-api \
 
 **Connection Pooling:**
 Already configured in `database.py`:
+
 - Min pool size: 2
 - Max pool size: 10
 - Command timeout: 60s
@@ -625,6 +678,7 @@ Already configured in `database.py`:
 ## Next Steps
 
 ### Immediate Actions
+
 - [x] Deploy to Cloud Run
 - [x] Set up Cloud SQL database
 - [x] Fix database schema issues
@@ -632,6 +686,7 @@ Already configured in `database.py`:
 - [x] Test document upload flow
 
 ### Recommended Next Steps
+
 1. **Add API Authentication** - Implement API keys or OAuth
 2. **Set Up Monitoring** - Configure alerts for errors/downtime
 3. **Implement Rate Limiting** - Prevent API abuse
@@ -645,6 +700,7 @@ Already configured in `database.py`:
 ## Support & Documentation
 
 ### Related Documentation Files
+
 - `DEPLOYMENT.md` - Detailed deployment guide
 - `DOCKER_READY.md` - Docker setup instructions
 - `QUICKSTART.md` - Quick start guide

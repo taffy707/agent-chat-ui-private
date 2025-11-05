@@ -28,6 +28,7 @@ docker-compose logs langgraph-api | grep Langfuse
 ```
 
 You should see:
+
 ```
 ✅ Langfuse client initialized successfully (Project: metatask)
 🔍 Langfuse tracing enabled for RetrievalGraph
@@ -49,11 +50,13 @@ pnpm dev
 1. **Open your browser**: http://localhost:3000
 
 2. **Send a test message**:
+
    - Select a knowledge base collection
    - Type: "What is photosynthesis?"
    - Click Send
 
 3. **Check browser console** (F12):
+
    - You should see:
      ```
      🔍 Sending context to LangGraph: {
@@ -73,6 +76,7 @@ pnpm dev
 Click on any trace to see:
 
 ### Trace Details
+
 - **User**: `default-user`
 - **Session**: Unique session ID that persists across page refreshes
 - **Tags**: `production`, `web-chat`, `agent-chat-ui`
@@ -83,6 +87,7 @@ Click on any trace to see:
   - has_content_blocks
 
 ### Execution Flow
+
 ```
 RetrievalGraph (total: ~3-5s)
 ├─ generate_query (~1s)
@@ -104,6 +109,7 @@ RetrievalGraph (total: ~3-5s)
 ## 🎯 What Gets Traced
 
 ### Every User Message
+
 - ✅ Full conversation history
 - ✅ User ID and session ID
 - ✅ Selected knowledge base collections
@@ -114,7 +120,9 @@ RetrievalGraph (total: ~3-5s)
 - ✅ Total cost and latency
 
 ### Regenerated Messages
+
 Same as above, plus:
+
 - ✅ Tagged with `regenerate` tag
 - ✅ Includes `action: regenerate` in metadata
 
@@ -123,16 +131,19 @@ Same as above, plus:
 ### How Sessions Work
 
 **New Session Created When:**
+
 - User opens the app for the first time
 - User clears browser sessionStorage
 - User closes and reopens the browser tab
 
 **Session Persists Across:**
+
 - Page refreshes
 - Navigation within the app
 - Browser back/forward
 
 **Session ID Storage:**
+
 - Stored in `sessionStorage.getItem('chat_session_id')`
 - Automatically generated using UUID v4
 - Check in browser DevTools → Application → Session Storage
@@ -140,6 +151,7 @@ Same as above, plus:
 ### View All Sessions
 
 In Langfuse dashboard:
+
 1. Go to https://cloud.langfuse.com/project/metatask
 2. Click "Sessions" in the left sidebar
 3. See all user sessions grouped together
@@ -180,6 +192,7 @@ In Langfuse dashboard:
 ### Filter Traces
 
 In Langfuse dashboard, filter by:
+
 - **User**: `default-user` (or your actual user IDs)
 - **Session**: Specific session ID
 - **Tags**: `web-chat`, `regenerate`, etc.
@@ -188,6 +201,7 @@ In Langfuse dashboard, filter by:
 ### View Metrics
 
 Check:
+
 - **Latency**: How long queries take
 - **Costs**: Token usage and costs per query
 - **Quality**: Add user feedback (coming soon)
@@ -196,12 +210,15 @@ Check:
 ### Common Queries
 
 **Most expensive queries:**
+
 - Sort by "Cost" column in Langfuse
 
 **Slowest queries:**
+
 - Sort by "Latency" column
 
 **Queries from specific collection:**
+
 - Filter metadata by collection_ids
 
 ## 🐛 Troubleshooting
@@ -209,28 +226,33 @@ Check:
 ### No Traces Appearing
 
 **Check Docker is running:**
+
 ```bash
 docker ps | grep retrieval-agent
 ```
 
 **Check Docker logs:**
+
 ```bash
 docker-compose logs langgraph-api | tail -50
 ```
 
 **Check frontend console:**
+
 - Open browser DevTools (F12)
 - Look for the debug log: `🔍 Sending context to LangGraph`
 
 ### Traces Missing Metadata
 
 **Check browser console:**
+
 ```bash
 # Should show session_id in the log
 console.log(sessionStorage.getItem('chat_session_id'))
 ```
 
 **Check network request:**
+
 - Open DevTools → Network tab
 - Look for POST request to `/threads/.../runs`
 - Check Request Payload → config → metadata
@@ -238,10 +260,11 @@ console.log(sessionStorage.getItem('chat_session_id'))
 ### Session ID Not Persisting
 
 **Clear and regenerate:**
+
 ```javascript
 // In browser console
-sessionStorage.removeItem('chat_session_id')
-window.location.reload()
+sessionStorage.removeItem("chat_session_id");
+window.location.reload();
 ```
 
 ## 💡 Next Steps
@@ -266,14 +289,14 @@ Implement thumbs up/down buttons to score traces:
 
 ```typescript
 // Create /app/api/langfuse-score/route.ts
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const { trace_id, score, comment } = await req.json();
 
   // TODO: Call Langfuse API to score the trace
   // For now, just log it
-  console.log('User feedback:', { trace_id, score, comment });
+  console.log("User feedback:", { trace_id, score, comment });
 
   return NextResponse.json({ success: true });
 }
@@ -282,6 +305,7 @@ export async function POST(req: Request) {
 ### 3. Monitor Production
 
 Set up dashboards in Langfuse to monitor:
+
 - Average latency per day
 - Token costs per user
 - Error rates
@@ -290,6 +314,7 @@ Set up dashboards in Langfuse to monitor:
 ### 4. Optimize Based on Data
 
 Use Langfuse insights to:
+
 - Identify slow queries → optimize retrieval
 - Find expensive queries → adjust model selection
 - Discover common questions → improve knowledge base

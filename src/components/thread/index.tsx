@@ -153,11 +153,11 @@ export function Thread() {
 
   // Session ID for Langfuse tracing - persists across page refreshes
   const [sessionId] = useState(() => {
-    if (typeof window !== 'undefined' && window.sessionStorage) {
-      let sid = sessionStorage.getItem('chat_session_id');
+    if (typeof window !== "undefined" && window.sessionStorage) {
+      let sid = sessionStorage.getItem("chat_session_id");
       if (!sid) {
         sid = uuidv4();
-        sessionStorage.setItem('chat_session_id', sid);
+        sessionStorage.setItem("chat_session_id", sid);
       }
       return sid;
     }
@@ -258,15 +258,15 @@ export function Thread() {
           configurable: context,
           metadata: {
             // ✨ Langfuse metadata - automatically traced in your Docker backend!
-            langfuse_user_id: context.user_id || 'anonymous',
+            langfuse_user_id: context.user_id || "anonymous",
             langfuse_session_id: sessionId,
-            langfuse_tags: ['production', 'web-chat', 'agent-chat-ui'],
+            langfuse_tags: ["production", "web-chat", "agent-chat-ui"],
             // Additional context for debugging
             collection_ids: context.collection_ids,
             collection_count: context.collection_ids?.length || 0,
             has_content_blocks: contentBlocks.length > 0,
             timestamp: new Date().toISOString(),
-          }
+          },
         } as any, // Type assertion to allow metadata field
         streamMode: ["values"],
         streamSubgraphs: true,
@@ -305,14 +305,19 @@ export function Thread() {
         configurable: context,
         metadata: {
           // ✨ Langfuse metadata for regenerated responses
-          langfuse_user_id: context.user_id || 'anonymous',
+          langfuse_user_id: context.user_id || "anonymous",
           langfuse_session_id: sessionId,
-          langfuse_tags: ['production', 'web-chat', 'agent-chat-ui', 'regenerate'],
+          langfuse_tags: [
+            "production",
+            "web-chat",
+            "agent-chat-ui",
+            "regenerate",
+          ],
           collection_ids: context.collection_ids,
           collection_count: context.collection_ids?.length || 0,
-          action: 'regenerate',
+          action: "regenerate",
           timestamp: new Date().toISOString(),
-        }
+        },
       } as any, // Type assertion to allow metadata field
       streamMode: ["values"],
       streamSubgraphs: true,

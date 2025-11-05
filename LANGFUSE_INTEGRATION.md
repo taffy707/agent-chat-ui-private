@@ -5,6 +5,7 @@ This guide shows you how to add Langfuse tracing to your existing Agent Chat UI 
 ## What This Does
 
 When users send messages through your chat UI:
+
 1. **Frontend** sends message with Langfuse metadata
 2. **Docker LangGraph API** (localhost:8123) processes it
 3. **Langfuse** automatically captures everything:
@@ -35,6 +36,7 @@ That's it! Your Docker deployment already has the Langfuse credentials configure
 Open `/src/components/thread/index.tsx` and find where `stream.submit()` is called (around line 240).
 
 ### Current Code:
+
 ```typescript
 stream.submit(
   { messages: [...toolMessages, newHumanMessage] },
@@ -45,25 +47,22 @@ stream.submit(
     streamResumable: true,
     optimisticValues: (prev) => ({
       ...prev,
-      messages: [
-        ...(prev.messages ?? []),
-        ...toolMessages,
-        newHumanMessage,
-      ],
+      messages: [...(prev.messages ?? []), ...toolMessages, newHumanMessage],
     }),
   },
 );
 ```
 
 ### Updated Code with Langfuse:
+
 ```typescript
 // Add session ID management at the top of the Thread component
 const [sessionId] = useState(() => {
-  if (typeof window !== 'undefined' && window.sessionStorage) {
-    let sid = sessionStorage.getItem('chat_session_id');
+  if (typeof window !== "undefined" && window.sessionStorage) {
+    let sid = sessionStorage.getItem("chat_session_id");
     if (!sid) {
       sid = uuidv4();
-      sessionStorage.setItem('chat_session_id', sid);
+      sessionStorage.setItem("chat_session_id", sid);
     }
     return sid;
   }
@@ -78,25 +77,21 @@ stream.submit(
       configurable: context,
       // Add Langfuse metadata here 👇
       metadata: {
-        langfuse_user_id: context.user_id || 'anonymous',
+        langfuse_user_id: context.user_id || "anonymous",
         langfuse_session_id: sessionId,
-        langfuse_tags: ['production', 'web-chat'],
+        langfuse_tags: ["production", "web-chat"],
         // Additional context
         collection_ids: context.collection_ids,
         collection_count: context.collection_ids?.length || 0,
         timestamp: new Date().toISOString(),
-      }
+      },
     },
     streamMode: ["values"],
     streamSubgraphs: true,
     streamResumable: true,
     optimisticValues: (prev) => ({
       ...prev,
-      messages: [
-        ...(prev.messages ?? []),
-        ...toolMessages,
-        newHumanMessage,
-      ],
+      messages: [...(prev.messages ?? []), ...toolMessages, newHumanMessage],
     }),
   },
 );
@@ -109,11 +104,11 @@ Here's the complete updated code for your Thread component:
 ```typescript
 // At the top of the Thread component (after line 150), add:
 const [sessionId] = useState(() => {
-  if (typeof window !== 'undefined' && window.sessionStorage) {
-    let sid = sessionStorage.getItem('chat_session_id');
+  if (typeof window !== "undefined" && window.sessionStorage) {
+    let sid = sessionStorage.getItem("chat_session_id");
     if (!sid) {
       sid = uuidv4();
-      sessionStorage.setItem('chat_session_id', sid);
+      sessionStorage.setItem("chat_session_id", sid);
     }
     return sid;
   }
@@ -141,7 +136,8 @@ const handleSubmit = async (e: FormEvent) => {
 
   const context = {
     user_id: selectedUserId || "default_user",
-    collection_ids: selectedCollectionIds.length > 0 ? selectedCollectionIds : undefined,
+    collection_ids:
+      selectedCollectionIds.length > 0 ? selectedCollectionIds : undefined,
     collection_count: selectedCollectionIds.length,
   };
 
@@ -158,32 +154,29 @@ const handleSubmit = async (e: FormEvent) => {
         configurable: context,
         // ✨ Langfuse metadata - automatically traced!
         metadata: {
-          langfuse_user_id: context.user_id || 'anonymous',
+          langfuse_user_id: context.user_id || "anonymous",
           langfuse_session_id: sessionId,
-          langfuse_tags: ['production', 'web-chat', 'agent-chat-ui'],
+          langfuse_tags: ["production", "web-chat", "agent-chat-ui"],
           // Additional debug info
           collection_ids: context.collection_ids,
           collection_count: context.collection_count,
           has_content_blocks: contentBlocks.length > 0,
           timestamp: new Date().toISOString(),
-          frontend_version: '1.0.0',
-        }
+          frontend_version: "1.0.0",
+        },
       },
       streamMode: ["values"],
       streamSubgraphs: true,
       streamResumable: true,
       optimisticValues: (prev) => ({
         ...prev,
-        messages: [
-          ...(prev.messages ?? []),
-          ...toolMessages,
-          newHumanMessage,
-        ],
+        messages: [...(prev.messages ?? []), ...toolMessages, newHumanMessage],
       }),
     },
   );
 
-  prevMessageLength.current = prevMessageLength.current + toolMessages.length + 1;
+  prevMessageLength.current =
+    prevMessageLength.current + toolMessages.length + 1;
 };
 ```
 
@@ -199,11 +192,13 @@ docker-compose up -d
 ```
 
 Verify Langfuse is enabled:
+
 ```bash
 docker-compose logs langgraph-api | grep Langfuse
 ```
 
 Should show:
+
 ```
 ✅ Langfuse client initialized successfully (Project: metatask)
 🔍 Langfuse tracing enabled for RetrievalGraph
@@ -232,6 +227,7 @@ pnpm dev
 Open: https://cloud.langfuse.com/project/metatask
 
 You should see a new trace with:
+
 - **Trace Name**: "RetrievalGraph"
 - **User ID**: Your user_id (or "anonymous")
 - **Session ID**: The session ID from sessionStorage
@@ -245,12 +241,14 @@ You should see a new trace with:
 For each chat message, Langfuse captures:
 
 ### Trace Overview
+
 - User who sent the message
 - Session grouping multiple messages
 - Total latency and cost
 - Tags for filtering
 
 ### Execution Details
+
 - **generate_query node**: How the search query was generated
 - **retrieve node**: Documents retrieved from your collections
 - **respond node**: Final response generation
@@ -258,6 +256,7 @@ For each chat message, Langfuse captures:
 - **Context**: All the metadata you passed
 
 ### Example Trace Structure
+
 ```
 RetrievalGraph
 ├─ generate_query
@@ -323,7 +322,7 @@ function MessageFeedback({ messageId }: { messageId: string }) {
 Then create `/app/api/feedback/route.ts`:
 
 ```typescript
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 // Note: Langfuse SDK would need to be installed on the backend
 // For now, we can't score traces from the frontend directly
 
@@ -336,7 +335,7 @@ export async function POST(req: Request) {
   // 2. Use Langfuse Node SDK to score the trace
   // 3. Store feedback in your own database
 
-  console.log('Feedback received:', { message_id, feedback });
+  console.log("Feedback received:", { message_id, feedback });
 
   return NextResponse.json({ success: true });
 }
@@ -347,7 +346,9 @@ export async function POST(req: Request) {
 The integration automatically manages sessions:
 
 ### New Session
+
 When a user:
+
 - Opens the app for the first time
 - Clicks "New Chat" button
 - Clears their sessionStorage
@@ -373,6 +374,7 @@ function NewSessionButton() {
 ```
 
 ### Continuing Session
+
 Users automatically continue their session across page refreshes until they close the browser tab.
 
 ## Debugging
@@ -382,7 +384,7 @@ Users automatically continue their session across page refreshes until they clos
 Add this console log in your Thread component:
 
 ```typescript
-console.log('📤 Sending to LangGraph with metadata:', {
+console.log("📤 Sending to LangGraph with metadata:", {
   user_id: context.user_id,
   session_id: sessionId,
   collections: context.collection_ids,
@@ -409,16 +411,19 @@ Look for trace activity.
 ### Common Issues
 
 **Issue**: No traces appearing in Langfuse
+
 - Check Docker logs: `docker-compose logs langgraph-api | grep Langfuse`
 - Verify credentials in `.env.production`
 - Check network: Can Docker reach cloud.langfuse.com?
 
 **Issue**: Traces missing user context
+
 - Verify metadata is in the config object
 - Check that user_id is not null/undefined
 - Look at browser console for logs
 
 **Issue**: Session not persisting
+
 - Check sessionStorage in browser DevTools
 - Verify sessionStorage is not being cleared
 - Check if user is in private/incognito mode
@@ -435,6 +440,7 @@ You've integrated Langfuse! Now every chat message automatically:
 ✅ Available in real-time on Langfuse dashboard
 
 **Next steps:**
+
 1. Monitor your traces at https://cloud.langfuse.com/project/metatask
 2. Add user feedback buttons (optional)
 3. Create dashboards for common queries
@@ -444,6 +450,7 @@ You've integrated Langfuse! Now every chat message automatically:
 ---
 
 **Need Help?**
+
 - Langfuse Docs: https://langfuse.com/docs
 - LangChain Integration: https://langfuse.com/integrations/frameworks/langchain
 - Your Dashboard: https://cloud.langfuse.com/project/metatask
