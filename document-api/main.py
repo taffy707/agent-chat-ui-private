@@ -47,12 +47,11 @@ app = FastAPI(
 # Configure CORS - Allow requests from your frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins (for now - restrict in production)
-    # For production, replace with specific domains:
-    # allow_origins=[
-    #     "http://localhost:3000",
-    #     "https://your-app.vercel.app",
-    # ],
+    allow_origins=[
+        "http://localhost:3000",           # Local development
+        "https://metatask-front.vercel.app",  # Production Vercel
+        "https://metatask.co",              # Production custom domain
+    ],
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, DELETE, etc.)
     allow_headers=["*"],  # Allow all headers
