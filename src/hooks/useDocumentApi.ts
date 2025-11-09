@@ -20,14 +20,14 @@ export function useDocumentApi() {
    * Get the access token from the current session
    */
   const getAccessToken = (): string | undefined => {
-    return session?.access_token;
+    return session?.accessToken;
   };
 
   /**
    * Check if user is authenticated and throw error if not
    */
   const ensureAuthenticated = () => {
-    if (!isAuthenticated || !session?.access_token) {
+    if (!isAuthenticated || !session?.accessToken) {
       throw new Error(
         "User must be authenticated to perform this action. Please sign in.",
       );
