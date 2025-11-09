@@ -65,9 +65,11 @@ class DocumentApiClient {
     return this.handleResponse<Collection>(response);
   }
 
-  async listCollections(
-    options?: { limit?: number; offset?: number; accessToken?: string },
-  ): Promise<CollectionListResponse> {
+  async listCollections(options?: {
+    limit?: number;
+    offset?: number;
+    accessToken?: string;
+  }): Promise<CollectionListResponse> {
     const params = new URLSearchParams({
       limit: (options?.limit ?? 100).toString(),
       offset: (options?.offset ?? 0).toString(),
@@ -153,7 +155,10 @@ class DocumentApiClient {
 
         // Add Authorization header if token provided
         if (options?.accessToken) {
-          xhr.setRequestHeader("Authorization", `Bearer ${options.accessToken}`);
+          xhr.setRequestHeader(
+            "Authorization",
+            `Bearer ${options.accessToken}`,
+          );
         }
 
         xhr.send(formData);
@@ -187,14 +192,12 @@ class DocumentApiClient {
     return this.handleResponse<DocumentListResponse>(response);
   }
 
-  async listAllDocuments(
-    options?: {
-      limit?: number;
-      offset?: number;
-      status?: string;
-      accessToken?: string;
-    },
-  ): Promise<DocumentListResponse> {
+  async listAllDocuments(options?: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+    accessToken?: string;
+  }): Promise<DocumentListResponse> {
     const params = new URLSearchParams({
       limit: (options?.limit ?? 100).toString(),
       offset: (options?.offset ?? 0).toString(),

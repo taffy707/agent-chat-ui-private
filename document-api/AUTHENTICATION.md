@@ -59,6 +59,7 @@ SUPABASE_ANON_KEY=your-supabase-anon-key-here
 ```
 
 **Where to find these values:**
+
 - Go to your Supabase project dashboard
 - Navigate to **Settings > API**
 - Copy the **Project URL** (SUPABASE_URL)
@@ -73,6 +74,7 @@ pip install -r requirements.txt
 ```
 
 The requirements.txt already includes:
+
 ```
 supabase>=2.8.0
 ```
@@ -247,6 +249,7 @@ Returned when authentication fails:
 ```
 
 **Common causes:**
+
 - Missing Authorization header
 - Invalid or expired JWT token
 - Malformed Bearer token
@@ -305,13 +308,13 @@ function DocumentUpload() {
 
   const uploadDocument = async (file: File, collectionId: string) => {
     const formData = new FormData();
-    formData.append('collection_id', collectionId);
-    formData.append('files', file);
+    formData.append("collection_id", collectionId);
+    formData.append("files", file);
 
-    const response = await fetch('http://localhost:8000/upload', {
-      method: 'POST',
+    const response = await fetch("http://localhost:8000/upload", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${session?.access_token}`  // ← JWT token
+        Authorization: `Bearer ${session?.access_token}`, // ← JWT token
       },
       body: formData,
     });
@@ -333,9 +336,11 @@ const { session } = useAuthContext();
 const token = session?.access_token;
 
 // Or directly from Supabase client
-import { getSupabaseClient } from '@/lib/auth/supabase-client';
+import { getSupabaseClient } from "@/lib/auth/supabase-client";
 const supabase = getSupabaseClient();
-const { data: { session } } = await supabase.auth.getSession();
+const {
+  data: { session },
+} = await supabase.auth.getSession();
 const token = session?.access_token;
 ```
 
@@ -394,6 +399,7 @@ curl -X GET http://localhost:8000/collections/{collection_id} \
 ### Problem: "Authentication failed" Error
 
 **Solution:**
+
 1. Verify SUPABASE_URL and SUPABASE_ANON_KEY are set correctly
 2. Check that the token is not expired (tokens typically expire after 1 hour)
 3. Ensure token is being sent in Authorization header as `Bearer <token>`
@@ -402,6 +408,7 @@ curl -X GET http://localhost:8000/collections/{collection_id} \
 ### Problem: "Invalid authentication scheme" Error
 
 **Solution:**
+
 - Ensure the Authorization header uses the format: `Bearer <token>`
 - Check for extra spaces or formatting issues
 - Don't include quotes around the token
@@ -412,6 +419,7 @@ curl -X GET http://localhost:8000/collections/{collection_id} \
 The API has CORS enabled for all origins by default. For production:
 
 1. Edit `main.py` line 49:
+
 ```python
 allow_origins=["https://your-frontend-domain.com"],
 ```
@@ -421,6 +429,7 @@ allow_origins=["https://your-frontend-domain.com"],
 ### Problem: "Supabase configuration missing" Error
 
 **Solution:**
+
 1. Ensure `.env` file exists in the `document-api` directory
 2. Verify SUPABASE_URL and SUPABASE_ANON_KEY are set
 3. Restart the API server after changing environment variables
@@ -429,6 +438,7 @@ allow_origins=["https://your-frontend-domain.com"],
 
 **Solution:**
 This should never happen if authentication is working correctly. If it does:
+
 1. Verify all database queries include user_id filtering
 2. Check that `resolve_user` dependency is present on all protected endpoints
 3. Review database.py to ensure user_id scoping is implemented

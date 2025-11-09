@@ -5,15 +5,18 @@ This guide covers running the Document API with authentication using Docker loca
 ## 📋 What's Been Updated
 
 ✅ **Docker Configuration:**
+
 - Added Supabase authentication environment variables to `docker-compose.yml`
 - Created `.env.docker` with Supabase credentials
 - Updated for authentication support
 
 ✅ **Frontend Configuration:**
+
 - Updated `.env` to point to local Docker (`http://localhost:8000`)
 - Cloud URL saved as comment for easy switching
 
 ✅ **Cloud Deployment:**
+
 - Created `deploy-cloudrun.sh` script with authentication
 - Includes Supabase environment variables in Cloud Run deployment
 
@@ -24,6 +27,7 @@ This guide covers running the Document API with authentication using Docker loca
 ### Step 1: Verify Files Are Ready
 
 Make sure these files exist in `/document-api/`:
+
 - ✅ `Dockerfile` - Updated with latest code
 - ✅ `docker-compose.yml` - Updated with Supabase auth vars
 - ✅ `.env` - Your local environment variables
@@ -66,6 +70,7 @@ docker-compose logs -f api
 ### Step 4: Verify Docker is Running
 
 The script should show:
+
 ```
 ✅ Document API is running!
 
@@ -88,6 +93,7 @@ docker-compose logs api
 ```
 
 Expected health response:
+
 ```json
 {
   "status": "healthy",
@@ -103,9 +109,10 @@ Expected health response:
 
 ```javascript
 // In browser console at localhost:3000
-const token = JSON.parse(localStorage.getItem('supabase.auth.token'))?.currentSession?.access_token;
-console.log('Token:', token);
-copy(token);  // Copies to clipboard
+const token = JSON.parse(localStorage.getItem("supabase.auth.token"))
+  ?.currentSession?.access_token;
+console.log("Token:", token);
+copy(token); // Copies to clipboard
 ```
 
 **Test with curl:**
@@ -135,24 +142,25 @@ Expected: 201 Created for POST, 200 OK for GET with your collections
 
 ```javascript
 // In browser console
-const response = await fetch('http://localhost:8000/collections', {
-  method: 'POST',
+const response = await fetch("http://localhost:8000/collections", {
+  method: "POST",
   headers: {
-    'Authorization': `Bearer ${JSON.parse(localStorage.getItem('supabase.auth.token'))?.currentSession?.access_token}`
+    Authorization: `Bearer ${JSON.parse(localStorage.getItem("supabase.auth.token"))?.currentSession?.access_token}`,
   },
   body: (() => {
     const fd = new FormData();
-    fd.append('name', 'Test from Browser');
+    fd.append("name", "Test from Browser");
     return fd;
-  })()
+  })(),
 });
 const data = await response.json();
-console.log('Created:', data);
+console.log("Created:", data);
 ```
 
 ### Troubleshooting Docker
 
 **Container won't start:**
+
 ```bash
 # View detailed logs
 docker-compose logs api
@@ -167,6 +175,7 @@ docker-compose up -d --build
 ```
 
 **Can't connect to PostgreSQL:**
+
 - Ensure PostgreSQL is running on your host machine
 - Check `POSTGRES_HOST=host.docker.internal` in docker-compose.yml
 - Verify PostgreSQL is accessible from Docker:
@@ -175,6 +184,7 @@ docker-compose up -d --build
   ```
 
 **Authentication errors:**
+
 - Verify Supabase credentials in `.env.docker`
 - Check logs: `docker-compose logs api | grep -i supabase`
 - Ensure frontend and backend use same Supabase project
@@ -199,12 +209,14 @@ docker-compose down -v
 ### Prerequisites
 
 1. **Google Cloud SDK installed:**
+
    ```bash
    gcloud --version
    # If not installed: https://cloud.google.com/sdk/docs/install
    ```
 
 2. **Authenticated with Google Cloud:**
+
    ```bash
    gcloud auth login
    gcloud config set project metatask-461115
@@ -220,6 +232,7 @@ docker-compose down -v
 ### Step 1: Review Deployment Script
 
 The `deploy-cloudrun.sh` script will:
+
 1. ✅ Load Supabase credentials from `.env`
 2. ✅ Build Docker image using Google Cloud Build
 3. ✅ Push image to Google Container Registry
@@ -239,6 +252,7 @@ chmod +x deploy-cloudrun.sh
 ```
 
 **What happens:**
+
 ```
 🚀 Deploying Document API to Google Cloud Run...
 🔧 Setting Google Cloud project...
@@ -283,6 +297,7 @@ curl -X GET ${CLOUD_URL}/collections \
 **Option A: Switch frontend to cloud (for production):**
 
 Edit `/agent-chat-ui/.env`:
+
 ```bash
 # Document Upload API Configuration
 # Cloud deployment: https://document-api-169798107925.us-central1.run.app
@@ -332,6 +347,7 @@ cd document-api
 ```
 
 The script will:
+
 1. Rebuild the Docker image with your latest code
 2. Push to Container Registry
 3. Update the Cloud Run service
@@ -370,6 +386,7 @@ gcloud run deploy document-api \
 ### Troubleshooting Cloud Deployment
 
 **Build fails:**
+
 ```bash
 # Check build logs
 gcloud builds list --limit 5
@@ -379,6 +396,7 @@ gcloud builds log [BUILD_ID]
 ```
 
 **Deployment succeeds but API doesn't work:**
+
 ```bash
 # Check Cloud Run logs
 gcloud run services logs read document-api --region us-central1 --limit 100
@@ -388,12 +406,14 @@ gcloud run services describe document-api --region us-central1 --format="value(s
 ```
 
 **Authentication errors in cloud:**
+
 - Verify Supabase URL and key are correct in Cloud Run
 - Check logs for "Authentication failed" messages
 - Test JWT token is valid and not expired
 - Ensure Cloud Run has correct SUPABASE_URL and SUPABASE_ANON_KEY
 
 **Can't connect to database:**
+
 - Verify POSTGRES_HOST IP is correct (34.69.160.99)
 - Check Cloud SQL firewall rules allow Cloud Run
 - Verify database credentials
@@ -459,6 +479,7 @@ curl -X GET https://document-api-169798107925.us-central1.run.app/collections -H
 ## Summary Checklist
 
 ### Local Docker Testing:
+
 - [ ] Docker Desktop is running
 - [ ] `.env.docker` file exists with Supabase credentials
 - [ ] Run `./docker-start.sh` successfully
@@ -468,6 +489,7 @@ curl -X GET https://document-api-169798107925.us-central1.run.app/collections -H
 - [ ] Can create collections and upload documents
 
 ### Cloud Deployment:
+
 - [ ] Google Cloud SDK installed and authenticated
 - [ ] `.env` file has Supabase credentials
 - [ ] Run `./deploy-cloudrun.sh` successfully
@@ -481,15 +503,18 @@ curl -X GET https://document-api-169798107925.us-central1.run.app/collections -H
 ## Need Help?
 
 **Check logs:**
+
 - Docker: `docker-compose logs -f api`
 - Cloud Run: `gcloud run services logs read document-api --region us-central1`
 
 **Review documentation:**
+
 - Authentication: `AUTHENTICATION.md`
 - Testing: `TESTING_DOCUMENT_API_AUTH.md`
 - Deployment: `DEPLOYMENT.md`
 
 **Common issues:**
+
 - Port 8000 conflict: Stop other services or change port in docker-compose.yml
 - PostgreSQL connection: Verify host.docker.internal works or use actual IP
 - Authentication: Ensure Supabase credentials match between frontend and backend

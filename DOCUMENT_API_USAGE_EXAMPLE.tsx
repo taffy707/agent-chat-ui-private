@@ -219,20 +219,23 @@ export function DocumentUploadExample() {
   }
 
   return (
-    <div className="p-8 space-y-6 max-w-4xl mx-auto">
+    <div className="mx-auto max-w-4xl space-y-6 p-8">
       <div>
-        <h1 className="text-2xl font-bold mb-2">Document Management</h1>
+        <h1 className="mb-2 text-2xl font-bold">Document Management</h1>
         <p className="text-muted-foreground">
           Upload and manage your documents with JWT authentication
         </p>
       </div>
 
       {/* Example 1 & 2: Create and List Collections */}
-      <div className="space-y-4 border rounded-lg p-4">
+      <div className="space-y-4 rounded-lg border p-4">
         <h2 className="text-lg font-semibold">Collections</h2>
 
         <div className="flex gap-2">
-          <Button onClick={handleCreateCollection} disabled={isLoading}>
+          <Button
+            onClick={handleCreateCollection}
+            disabled={isLoading}
+          >
             Create Example Collection
           </Button>
           <Button
@@ -248,13 +251,16 @@ export function DocumentUploadExample() {
           <div className="space-y-2">
             <p className="text-sm font-medium">Select a collection:</p>
             <select
-              className="w-full p-2 border rounded"
+              className="w-full rounded border p-2"
               value={selectedCollectionId || ""}
               onChange={(e) => setSelectedCollectionId(e.target.value)}
             >
               <option value="">-- Select Collection --</option>
               {collections.map((col) => (
-                <option key={col.id} value={col.id}>
+                <option
+                  key={col.id}
+                  value={col.id}
+                >
                   {col.name} ({col.document_count} documents)
                 </option>
               ))}
@@ -264,7 +270,7 @@ export function DocumentUploadExample() {
       </div>
 
       {/* Example 3: Upload Documents */}
-      <div className="space-y-4 border rounded-lg p-4">
+      <div className="space-y-4 rounded-lg border p-4">
         <h2 className="text-lg font-semibold">Upload Documents</h2>
 
         <div className="space-y-2">
@@ -282,9 +288,9 @@ export function DocumentUploadExample() {
                 <span>Uploading...</span>
                 <span>{uploadProgress}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="h-2 w-full rounded-full bg-gray-200">
                 <div
-                  className="bg-blue-600 h-2 rounded-full transition-all"
+                  className="h-2 rounded-full bg-blue-600 transition-all"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>
@@ -292,7 +298,7 @@ export function DocumentUploadExample() {
           )}
 
           {!selectedCollectionId && (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Please select a collection first
             </p>
           )}
@@ -300,21 +306,24 @@ export function DocumentUploadExample() {
       </div>
 
       {/* Example 4: List Documents */}
-      <div className="space-y-4 border rounded-lg p-4">
+      <div className="space-y-4 rounded-lg border p-4">
         <h2 className="text-lg font-semibold">Documents</h2>
 
-        <Button onClick={handleListDocuments} disabled={isLoading}>
+        <Button
+          onClick={handleListDocuments}
+          disabled={isLoading}
+        >
           List All Documents
         </Button>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Check browser console to see the results
         </p>
       </div>
 
       {/* Loading indicator */}
       {isLoading && (
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-muted-foreground text-center text-sm">
           Loading...
         </div>
       )}

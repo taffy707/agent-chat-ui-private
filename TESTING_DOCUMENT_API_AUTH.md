@@ -7,6 +7,7 @@ This guide will help you test the JWT authentication integration between your fr
 Before testing, ensure you have:
 
 1. ✅ **Supabase Project Set Up**
+
    - Created a Supabase project at https://supabase.com
    - Configured authentication providers (email/password at minimum)
    - Noted your project URL and anon key
@@ -14,6 +15,7 @@ Before testing, ensure you have:
 2. ✅ **Environment Variables Configured**
 
    **Frontend** (`.env` or `.env.local`):
+
    ```bash
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
@@ -21,6 +23,7 @@ Before testing, ensure you have:
    ```
 
    **Backend** (`document-api/.env`):
+
    ```bash
    SUPABASE_URL=https://your-project.supabase.co
    SUPABASE_ANON_KEY=your-anon-key-here
@@ -28,6 +31,7 @@ Before testing, ensure you have:
    ```
 
 3. ✅ **Dependencies Installed**
+
    ```bash
    # Frontend
    pnpm install
@@ -44,12 +48,14 @@ Before testing, ensure you have:
 ### Step 1: Start Both Servers
 
 **Terminal 1 - Start Document API:**
+
 ```bash
 cd document-api
 python main.py
 ```
 
 Expected output:
+
 ```
 INFO:     Started server process
 INFO:     Waiting for application startup.
@@ -59,11 +65,13 @@ INFO:     Uvicorn running on http://0.0.0.0:8000
 ```
 
 **Terminal 2 - Start Frontend:**
+
 ```bash
 pnpm dev
 ```
 
 Expected output:
+
 ```
   ▲ Next.js 15.x.x
   - Local:        http://localhost:3000
@@ -74,11 +82,13 @@ Expected output:
 ### Step 2: Verify Both Services Are Running
 
 **Test Document API Health (No Auth Required):**
+
 ```bash
 curl http://localhost:8000/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "healthy",
@@ -89,6 +99,7 @@ Expected response:
 ```
 
 **Test Frontend:**
+
 - Open browser: http://localhost:3000
 - You should see the Agent Chat UI
 - Should be redirected to `/signin` if not authenticated
@@ -98,10 +109,12 @@ Expected response:
 ### Step 3: Sign Up / Sign In via Frontend
 
 1. **Navigate to Sign In page:**
+
    - Go to http://localhost:3000/signin
    - Or click sign-in from the navigation
 
 2. **Create an account or sign in:**
+
    - Option A: Email/password
      - Enter email and password
      - If signing up, use `/signup` page
@@ -124,14 +137,15 @@ Open browser DevTools (F12), go to Console, and run:
 
 ```javascript
 // Get the current session
-const session = JSON.parse(localStorage.getItem('supabase.auth.token'));
-console.log('Access Token:', session?.currentSession?.access_token);
+const session = JSON.parse(localStorage.getItem("supabase.auth.token"));
+console.log("Access Token:", session?.currentSession?.access_token);
 
 // Copy the token
 copy(session?.currentSession?.access_token);
 ```
 
 The token should look like:
+
 ```
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzA2...
 ```
@@ -170,11 +184,13 @@ export function TokenDebug() {
 Now that you have your JWT token, test the Document API endpoints:
 
 **Set token as environment variable:**
+
 ```bash
 export TOKEN="your-actual-jwt-token-here"
 ```
 
 **Test 1: Create a Collection (Authenticated)**
+
 ```bash
 curl -X POST http://localhost:8000/collections \
   -H "Authorization: Bearer $TOKEN" \
@@ -183,6 +199,7 @@ curl -X POST http://localhost:8000/collections \
 ```
 
 Expected response (success):
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -196,12 +213,14 @@ Expected response (success):
 ```
 
 **Test 2: List Collections (Authenticated)**
+
 ```bash
 curl -X GET "http://localhost:8000/collections?limit=10&offset=0" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 Expected response:
+
 ```json
 {
   "user_id": "user-uuid-from-supabase",
@@ -223,11 +242,13 @@ Expected response:
 **Test 3: Upload a Document (Authenticated)**
 
 First, create a test file:
+
 ```bash
 echo "Hello, this is a test document!" > test.txt
 ```
 
 Then upload:
+
 ```bash
 curl -X POST http://localhost:8000/upload \
   -H "Authorization: Bearer $TOKEN" \
@@ -236,6 +257,7 @@ curl -X POST http://localhost:8000/upload \
 ```
 
 Expected response (202 Accepted):
+
 ```json
 {
   "status": "accepted",
@@ -251,11 +273,13 @@ Expected response (202 Accepted):
 ```
 
 **Test 4: Test Without Authentication (Should Fail)**
+
 ```bash
 curl -X GET http://localhost:8000/collections
 ```
 
 Expected response (401 Unauthorized):
+
 ```json
 {
   "detail": "Not authenticated"
@@ -263,12 +287,14 @@ Expected response (401 Unauthorized):
 ```
 
 **Test 5: Test With Invalid Token (Should Fail)**
+
 ```bash
 curl -X GET http://localhost:8000/collections \
   -H "Authorization: Bearer invalid-token-here"
 ```
 
 Expected response (401 Unauthorized):
+
 ```json
 {
   "detail": "Authentication failed"
@@ -290,21 +316,21 @@ Now test using the React hooks we created:
 ```javascript
 // Test creating a collection
 async function testCreateCollection() {
-  const response = await fetch('http://localhost:8000/collections', {
-    method: 'POST',
+  const response = await fetch("http://localhost:8000/collections", {
+    method: "POST",
     headers: {
-      'Authorization': `Bearer ${JSON.parse(localStorage.getItem('supabase.auth.token'))?.currentSession?.access_token}`
+      Authorization: `Bearer ${JSON.parse(localStorage.getItem("supabase.auth.token"))?.currentSession?.access_token}`,
     },
     body: (() => {
       const formData = new FormData();
-      formData.append('name', 'Test Collection from Browser');
-      formData.append('description', 'Created via browser console');
+      formData.append("name", "Test Collection from Browser");
+      formData.append("description", "Created via browser console");
       return formData;
-    })()
+    })(),
   });
 
   const data = await response.json();
-  console.log('Created collection:', data);
+  console.log("Created collection:", data);
   return data;
 }
 
@@ -314,6 +340,7 @@ testCreateCollection();
 **Option B: Using the Example Component**
 
 1. Copy the example component to your app:
+
 ```bash
 cp DOCUMENT_API_USAGE_EXAMPLE.tsx src/app/test-documents/page.tsx
 ```
@@ -339,12 +366,16 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 export default function TestAuthPage() {
-  const { createCollection, listCollections, isAuthenticated } = useDocumentApi();
+  const { createCollection, listCollections, isAuthenticated } =
+    useDocumentApi();
 
   const testAuth = async () => {
     try {
       // Create a collection
-      const collection = await createCollection("Test Collection", "Testing auth");
+      const collection = await createCollection(
+        "Test Collection",
+        "Testing auth",
+      );
       console.log("Created:", collection);
       toast.success(`Collection created: ${collection.name}`);
 
@@ -364,9 +395,9 @@ export default function TestAuthPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">Authentication Test</h1>
+      <h1 className="mb-4 text-2xl font-bold">Authentication Test</h1>
       <Button onClick={testAuth}>Test Document API Auth</Button>
-      <p className="mt-4 text-sm text-muted-foreground">
+      <p className="text-muted-foreground mt-4 text-sm">
         Check browser console for detailed output
       </p>
     </div>
@@ -381,15 +412,18 @@ export default function TestAuthPage() {
 Verify that users can only see their own data:
 
 1. **Sign in as User A:**
+
    - Create a collection named "User A Collection"
    - Note the collection ID from response
 
 2. **Sign out and sign in as User B:**
+
    - Try to list collections
    - You should NOT see "User A Collection"
    - Try to create your own collection
 
 3. **Attempt to access User A's collection as User B:**
+
    ```bash
    # Get User B's token
    export TOKEN_B="user-b-jwt-token"
@@ -408,6 +442,7 @@ Verify that users can only see their own data:
 ### Issue 1: "Authentication failed" Error
 
 **Symptoms:**
+
 ```json
 {
   "detail": "Authentication failed"
@@ -415,12 +450,14 @@ Verify that users can only see their own data:
 ```
 
 **Solutions:**
+
 1. Verify Supabase credentials are correct in both frontend and backend
 2. Check that you're signed in on the frontend
 3. Ensure token hasn't expired (tokens expire after ~1 hour)
 4. Try signing out and back in to get a fresh token
 
 **Check Supabase connection:**
+
 ```bash
 # In document-api directory
 python -c "from config import settings; print(settings.SUPABASE_URL, settings.SUPABASE_ANON_KEY[:20])"
@@ -429,6 +466,7 @@ python -c "from config import settings; print(settings.SUPABASE_URL, settings.SU
 ### Issue 2: "Not authenticated" Error
 
 **Symptoms:**
+
 ```json
 {
   "detail": "Not authenticated"
@@ -436,11 +474,13 @@ python -c "from config import settings; print(settings.SUPABASE_URL, settings.SU
 ```
 
 **Solutions:**
+
 1. Ensure you're including the Authorization header
 2. Check that the header format is exactly: `Authorization: Bearer <token>`
 3. Verify no extra spaces or quotes around the token
 
 **Test your token format:**
+
 ```bash
 # Should be in format: Bearer eyJhbGciOiJIUzI1NiIs...
 echo "Authorization: Bearer $TOKEN"
@@ -449,11 +489,13 @@ echo "Authorization: Bearer $TOKEN"
 ### Issue 3: CORS Errors
 
 **Symptoms:**
+
 ```
 Access to fetch at 'http://localhost:8000/collections' from origin 'http://localhost:3000' has been blocked by CORS policy
 ```
 
 **Solutions:**
+
 1. CORS is enabled by default in the Document API
 2. If still seeing errors, check `main.py` lines 46-58
 3. For production, update `allow_origins` list with your frontend domain
@@ -461,6 +503,7 @@ Access to fetch at 'http://localhost:8000/collections' from origin 'http://local
 ### Issue 4: Token Expired
 
 **Symptoms:**
+
 ```json
 {
   "detail": "Invalid token or user not found"
@@ -468,6 +511,7 @@ Access to fetch at 'http://localhost:8000/collections' from origin 'http://local
 ```
 
 **Solutions:**
+
 1. JWT tokens expire after ~1 hour (default Supabase setting)
 2. Sign out and sign back in to get a new token
 3. The frontend automatically refreshes tokens via Supabase SDK
@@ -476,16 +520,19 @@ Access to fetch at 'http://localhost:8000/collections' from origin 'http://local
 ### Issue 5: Environment Variables Not Loading
 
 **Symptoms:**
+
 - "Supabase configuration missing" error
 - API can't find SUPABASE_URL
 
 **Solutions:**
+
 1. Ensure `.env` file exists in `document-api/` directory
 2. Restart the Python server after changing `.env`
 3. Verify variable names match exactly (case-sensitive)
 4. Check for typos in variable names
 
 **Debug environment variables:**
+
 ```python
 # In Python shell from document-api directory
 from config import settings
@@ -520,16 +567,19 @@ Use this checklist to confirm everything is working:
 Once authentication is working:
 
 1. **Build Your UI:**
+
    - Use the example component as a starting point
    - Integrate document management into your application
    - Add file upload UI components
 
 2. **Deploy to Production:**
+
    - Follow `document-api/DEPLOYMENT.md` for Google Cloud deployment
    - Update environment variables in production
    - Configure CORS for your production domain
 
 3. **Add Features:**
+
    - Document search and filtering
    - Collection management UI
    - Document preview
@@ -559,17 +609,23 @@ If you encounter issues not covered here:
 ## Quick Reference
 
 **Get JWT Token (Browser Console):**
+
 ```javascript
-copy(JSON.parse(localStorage.getItem('supabase.auth.token'))?.currentSession?.access_token)
+copy(
+  JSON.parse(localStorage.getItem("supabase.auth.token"))?.currentSession
+    ?.access_token,
+);
 ```
 
 **Test with curl:**
+
 ```bash
 export TOKEN="your-token-here"
 curl -X GET http://localhost:8000/collections -H "Authorization: Bearer $TOKEN"
 ```
 
 **Use in React:**
+
 ```tsx
 import { useDocumentApi } from "@/hooks/useDocumentApi";
 

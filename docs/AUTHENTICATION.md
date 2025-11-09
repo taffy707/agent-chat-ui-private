@@ -55,6 +55,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
 **Where to find these values:**
+
 - `NEXT_PUBLIC_SUPABASE_URL`: Your project URL from Supabase dashboard
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: The `anon` public key from Project Settings > API
 
@@ -117,13 +118,14 @@ NEXT_PUBLIC_GOOGLE_AUTH_DISABLED=true
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Your Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Your Supabase anonymous (public) key |
-| `NEXT_PUBLIC_GOOGLE_AUTH_DISABLED` | No | Set to `"true"` to disable Google OAuth |
+| Variable                           | Required | Description                             |
+| ---------------------------------- | -------- | --------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`         | Yes      | Your Supabase project URL               |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`    | Yes      | Your Supabase anonymous (public) key    |
+| `NEXT_PUBLIC_GOOGLE_AUTH_DISABLED` | No       | Set to `"true"` to disable Google OAuth |
 
 **Security Notes:**
+
 - Only the `anon` key should be used client-side (it's prefixed with `NEXT_PUBLIC_`)
 - Never expose your Supabase `service_role` key in the frontend
 - The `anon` key is safe to expose as it's protected by Row Level Security (RLS)
@@ -144,6 +146,7 @@ The application includes a user profile section at the bottom of the sidebar nav
   - Sign in button (when not authenticated)
 
 To access the user profile menu:
+
 1. Click on your profile section at the bottom of the sidebar
 2. Select "Sign out" to log out of your account
 
@@ -179,19 +182,19 @@ function MyComponent() {
 ```tsx
 const {
   // State
-  user,              // Current user object or null
-  session,           // Current session or null
-  isAuthenticated,   // Boolean: true if user is signed in
-  isLoading,         // Boolean: true while loading auth state
+  user, // Current user object or null
+  session, // Current session or null
+  isAuthenticated, // Boolean: true if user is signed in
+  isLoading, // Boolean: true while loading auth state
 
   // Methods
-  signIn,            // (credentials) => Promise
-  signUp,            // (credentials) => Promise
-  signInWithGoogle,  // () => Promise
-  signOut,           // () => Promise
-  resetPassword,     // (email) => Promise
-  updatePassword,    // (newPassword) => Promise
-  updateUser,        // (attributes) => Promise
+  signIn, // (credentials) => Promise
+  signUp, // (credentials) => Promise
+  signInWithGoogle, // () => Promise
+  signOut, // () => Promise
+  resetPassword, // (email) => Promise
+  updatePassword, // (newPassword) => Promise
+  updateUser, // (attributes) => Promise
 } = useAuthContext();
 ```
 
@@ -238,11 +241,13 @@ const NO_AUTH_PATHS = ["/signin", "/signup", "/your-public-route"];
 ### Enabling Google OAuth
 
 1. **Set up Google OAuth in Supabase:**
+
    - Go to Authentication > Providers
    - Enable Google
    - Enter your Google Client ID and Secret
 
 2. **Configure in your app:**
+
    - Ensure `NEXT_PUBLIC_GOOGLE_AUTH_DISABLED` is NOT set or set to `"false"`
 
 3. **Set redirect URL in Google Console:**
@@ -329,6 +334,7 @@ pnpm dev
 **Problem**: Missing or incorrect environment variables
 
 **Solution**:
+
 1. Ensure `.env.local` exists and contains valid values
 2. Restart your development server after changing environment variables
 3. Verify the values in your Supabase dashboard
@@ -338,6 +344,7 @@ pnpm dev
 **Problem**: Session not persisting
 
 **Solution**:
+
 1. Check browser console for errors
 2. Ensure cookies are enabled in your browser
 3. Verify your Supabase URL and keys are correct
@@ -348,6 +355,7 @@ pnpm dev
 **Problem**: Google sign-in button not appearing or failing
 
 **Solution**:
+
 1. Verify `NEXT_PUBLIC_GOOGLE_AUTH_DISABLED` is not set to `"true"`
 2. Ensure Google OAuth is enabled in Supabase
 3. Check that redirect URLs are properly configured in Google Console
@@ -358,6 +366,7 @@ pnpm dev
 **Problem**: Users not receiving confirmation emails
 
 **Solution**:
+
 1. Check spam/junk folder
 2. In Supabase dashboard, go to Authentication > Email Templates
 3. For development, disable email confirmation: Authentication > Providers > Email > Enable email confirmations (toggle off)
@@ -367,6 +376,7 @@ pnpm dev
 **Problem**: Type errors when using `useAuthContext`
 
 **Solution**:
+
 - Ensure you're using the hook inside a component wrapped by `AuthProvider`
 - Check that you've imported the types correctly
 - Restart your TypeScript server in your editor

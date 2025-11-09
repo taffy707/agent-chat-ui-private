@@ -69,7 +69,10 @@ export function NavUser() {
           >
             <Avatar className="h-8 w-8 rounded-lg">
               {displayUser.avatar && (
-                <AvatarImage src={displayUser.avatar} alt={displayUser.name} />
+                <AvatarImage
+                  src={displayUser.avatar}
+                  alt={displayUser.name}
+                />
               )}
               <AvatarFallback className="rounded-lg">
                 {displayUser.name.substring(0, 2).toUpperCase()}
@@ -94,7 +97,10 @@ export function NavUser() {
             <div className="flex items-center gap-2 px-2 py-1.5">
               <Avatar className="h-8 w-8 rounded-lg">
                 {displayUser.avatar && (
-                  <AvatarImage src={displayUser.avatar} alt={displayUser.name} />
+                  <AvatarImage
+                    src={displayUser.avatar}
+                    alt={displayUser.name}
+                  />
                 )}
                 <AvatarFallback className="rounded-lg">
                   {displayUser.name.substring(0, 2).toUpperCase()}
@@ -113,7 +119,10 @@ export function NavUser() {
           <DropdownMenuSeparator />
 
           {isAuthenticated ? (
-            <DropdownMenuItem onClick={handleSignOut} disabled={isSigningOut}>
+            <DropdownMenuItem
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+            >
               {isSigningOut ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
