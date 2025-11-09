@@ -68,6 +68,38 @@ To use these variables:
 
 When these environment variables are set, the application will use them instead of showing the setup form.
 
+## Authentication
+
+Agent Chat UI includes a full Supabase-based authentication system for the frontend. This provides secure user sign-up, sign-in, session management, and protected routes.
+
+### Features
+
+- Email/password authentication
+- Optional Google OAuth sign-in
+- Automatic session persistence and refresh
+- Protected routes with middleware
+- User profile management (first name, last name, company name)
+
+### Quick Setup
+
+1. Create a [Supabase](https://supabase.com) project
+2. Add your Supabase credentials to `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+3. (Optional) To disable Google OAuth:
+
+```bash
+NEXT_PUBLIC_GOOGLE_AUTH_DISABLED=true
+```
+
+For detailed setup instructions, configuration options, and usage examples, see the [Authentication Documentation](docs/AUTHENTICATION.md).
+
+**Note:** This authentication is for the frontend only. Backend authentication for LangGraph server or Document API is not included.
+
 ## Hiding Messages in the Chat
 
 You can control the visibility of messages within the Agent Chat UI in two main ways:

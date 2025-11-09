@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
+import { NavUser } from "./nav-user";
 
 function ThreadList({
   threads,
@@ -199,6 +200,9 @@ export default function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* User Profile Section at Bottom */}
+      <NavUser />
     </div>
   );
 
