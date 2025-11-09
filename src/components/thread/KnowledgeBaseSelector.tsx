@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuthContext } from "@/providers/Auth";
 
 interface KnowledgeBaseSelectorProps {
   userId: string;
@@ -29,6 +30,7 @@ export function KnowledgeBaseSelector({
   selectedCollectionIds,
   onSelectionChange,
 }: KnowledgeBaseSelectorProps) {
+  const { session } = useAuthContext();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +38,18 @@ export function KnowledgeBaseSelector({
 
   // Memoize loadCollections with useCallback to avoid useEffect dependency issues
   const loadCollections = useCallback(async () => {
+    const accessToken = session?.accessToken;
+    if (!accessToken) {
+      setError("Not authenticated");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      const response = await documentApiClient.listCollections(userId);
+      const response = await documentApiClient.listCollections({
+        accessToken,
+      });
       setCollections(response.collections);
     } catch (err) {
       const errorMessage =
@@ -51,7 +61,7 @@ export function KnowledgeBaseSelector({
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [session?.accessToken]);
 
   // Load collections on mount and when userId changes
   useEffect(() => {

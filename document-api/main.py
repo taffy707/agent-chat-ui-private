@@ -14,14 +14,15 @@ import asyncio
 import logging
 import re
 from pathlib import Path
-from typing import List, Optional
+from typing import Annotated, List, Optional
 from uuid import UUID
 
-from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
 
+from auth import AuthenticatedUser, resolve_user
 from config import settings
 from database import db
 from deletion_queue import DeletionQueue
@@ -147,7 +148,7 @@ async def health_check():
 
 @app.post("/collections", tags=["Collections"], status_code=status.HTTP_201_CREATED)
 async def create_collection(
-    user_id: str = Form(..., description="User ID who owns the collection"),
+    user: Annotated[AuthenticatedUser, Depends(resolve_user)],
     name: str = Form(..., description="Collection name"),
     description: Optional[str] = Form(None, description="Optional collection description"),
 ):
@@ -157,8 +158,9 @@ async def create_collection(
     Collections allow users to group related documents together
     (e.g., "Medical Research", "Work Documents", "Personal Files").
 
+    Requires authentication via Bearer token.
+
     Args:
-        user_id: User identifier
         name: Collection name (must be unique per user)
         description: Optional description
 
@@ -166,8 +168,8 @@ async def create_collection(
         Created collection with ID and metadata
     """
     try:
-        collection_id = await db.create_collection(user_id, name, description)
-        collection = await db.get_collection_by_id(collection_id, user_id)
+        collection_id = await db.create_collection(user.user_id, name, description)
+        collection = await db.get_collection_by_id(collection_id, user.user_id)
 
         # Convert datetime to string
         if collection:
@@ -194,15 +196,16 @@ async def create_collection(
 
 @app.get("/collections", tags=["Collections"])
 async def list_collections(
-    user_id: str = Query(..., description="User ID to list collections for"),
+    user: Annotated[AuthenticatedUser, Depends(resolve_user)],
     limit: int = Query(100, ge=1, le=1000, description="Maximum collections to return"),
     offset: int = Query(0, ge=0, description="Number of collections to skip"),
 ):
     """
-    List all collections for a user with document counts.
+    List all collections for the authenticated user with document counts.
+
+    Requires authentication via Bearer token.
 
     Args:
-        user_id: User identifier
         limit: Maximum collections to return
         offset: Pagination offset
 
@@ -210,8 +213,8 @@ async def list_collections(
         List of collections with document counts
     """
     try:
-        collections = await db.list_collections(user_id, limit, offset)
-        total_count = await db.count_user_collections(user_id)
+        collections = await db.list_collections(user.user_id, limit, offset)
+        total_count = await db.count_user_collections(user.user_id)
 
         # Convert datetime and UUID to strings
         for collection in collections:
@@ -222,7 +225,7 @@ async def list_collections(
                 collection["updated_at"] = collection["updated_at"].isoformat()
 
         return {
-            "user_id": user_id,
+            "user_id": user.user_id,
             "total_count": total_count,
             "limit": limit,
             "offset": offset,
@@ -231,7 +234,7 @@ async def list_collections(
         }
 
     except Exception as e:
-        logger.error(f"Error listing collections for user {user_id}: {str(e)}")
+        logger.error(f"Error listing collections for user {user.user_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list collections: {str(e)}",
@@ -241,20 +244,21 @@ async def list_collections(
 @app.get("/collections/{collection_id}", tags=["Collections"])
 async def get_collection(
     collection_id: UUID,
-    user_id: str = Query(..., description="User ID for ownership verification"),
+    user: Annotated[AuthenticatedUser, Depends(resolve_user)],
 ):
     """
     Get details of a specific collection.
 
+    Requires authentication via Bearer token.
+
     Args:
         collection_id: Collection UUID
-        user_id: User ID for ownership verification
 
     Returns:
         Collection details with document count
     """
     try:
-        collection = await db.get_collection_by_id(collection_id, user_id)
+        collection = await db.get_collection_by_id(collection_id, user.user_id)
 
         if not collection:
             raise HTTPException(
@@ -284,16 +288,17 @@ async def get_collection(
 @app.get("/collections/{collection_id}/documents", tags=["Collections"])
 async def list_collection_documents(
     collection_id: UUID,
-    user_id: str = Query(..., description="User ID for ownership verification"),
+    user: Annotated[AuthenticatedUser, Depends(resolve_user)],
     limit: int = Query(100, ge=1, le=1000, description="Maximum documents to return"),
     offset: int = Query(0, ge=0, description="Number of documents to skip"),
 ):
     """
     List all documents in a specific collection.
 
+    Requires authentication via Bearer token.
+
     Args:
         collection_id: Collection UUID
-        user_id: User ID for ownership verification
         limit: Maximum documents to return
         offset: Pagination offset
 
@@ -302,7 +307,7 @@ async def list_collection_documents(
     """
     try:
         # Verify collection exists and user owns it
-        collection = await db.get_collection_by_id(collection_id, user_id)
+        collection = await db.get_collection_by_id(collection_id, user.user_id)
         if not collection:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -311,9 +316,9 @@ async def list_collection_documents(
 
         # Get documents
         documents = await db.list_documents_by_collection(
-            collection_id, user_id, limit, offset
+            collection_id, user.user_id, limit, offset
         )
-        total_count = await db.count_collection_documents(collection_id, user_id)
+        total_count = await db.count_collection_documents(collection_id, user.user_id)
 
         # Convert datetime and UUID to strings
         for doc in documents:
@@ -329,7 +334,7 @@ async def list_collection_documents(
         return {
             "collection_id": str(collection_id),
             "collection_name": collection["name"],
-            "user_id": user_id,
+            "user_id": user.user_id,
             "total_count": total_count,
             "limit": limit,
             "offset": offset,
@@ -352,7 +357,7 @@ async def list_collection_documents(
 @app.delete("/collections/{collection_id}", tags=["Collections"])
 async def delete_collection(
     collection_id: UUID,
-    user_id: str = Query(..., description="User ID for ownership verification"),
+    user: Annotated[AuthenticatedUser, Depends(resolve_user)],
 ):
     """
     Delete a collection and ALL its documents (CASCADE delete).
@@ -365,16 +370,17 @@ async def delete_collection(
 
     WARNING: This action cannot be undone!
 
+    Requires authentication via Bearer token.
+
     Args:
         collection_id: Collection UUID
-        user_id: User ID for ownership verification
 
     Returns:
         Deletion summary with counts
     """
     try:
         # Get collection and documents before deleting
-        collection = await db.get_collection_by_id(collection_id, user_id)
+        collection = await db.get_collection_by_id(collection_id, user.user_id)
         if not collection:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -383,7 +389,7 @@ async def delete_collection(
 
         # Get all documents in collection (for GCS/Vertex AI cleanup)
         documents = await db.list_documents_by_collection(
-            collection_id, user_id, limit=10000, offset=0
+            collection_id, user.user_id, limit=10000, offset=0
         )
 
         # Delete from GCS and queue Vertex AI deletions
@@ -409,7 +415,7 @@ async def delete_collection(
                     # Queue for retry
                     await deletion_queue.enqueue_deletion(
                         vertex_ai_doc_id=doc["vertex_ai_doc_id"],
-                        user_id=user_id,
+                        user_id=user.user_id,
                         original_filename=doc["original_filename"],
                     )
                     vertex_ai_queued_count += 1
@@ -417,13 +423,13 @@ async def delete_collection(
                 # Queue for retry
                 await deletion_queue.enqueue_deletion(
                     vertex_ai_doc_id=doc["vertex_ai_doc_id"],
-                    user_id=user_id,
+                    user_id=user.user_id,
                     original_filename=doc["original_filename"],
                 )
                 vertex_ai_queued_count += 1
 
         # Delete collection (CASCADE deletes documents from PostgreSQL)
-        success, doc_count = await db.delete_collection(collection_id, user_id)
+        success, doc_count = await db.delete_collection(collection_id, user.user_id)
 
         if not success:
             raise HTTPException(
@@ -485,7 +491,7 @@ def validate_file(file: UploadFile) -> tuple[bool, str]:
 
 @app.post("/upload", tags=["Documents"], status_code=status.HTTP_202_ACCEPTED)
 async def upload_documents(
-    user_id: str = Form(..., description="User ID who owns the document"),
+    user: Annotated[AuthenticatedUser, Depends(resolve_user)],
     collection_id: UUID = Form(..., description="Collection ID where documents will be stored"),
     files: List[UploadFile] = File(...),
 ):
@@ -506,8 +512,9 @@ async def upload_documents(
     - Generate embeddings
     - Index for search
 
+    Requires authentication via Bearer token.
+
     Args:
-        user_id: User identifier who owns the documents
         collection_id: Collection UUID where documents will be stored
         files: List of files to upload (PDF, DOCX, TXT, HTML)
 
@@ -518,7 +525,7 @@ async def upload_documents(
         HTTPException: If validation fails or upload errors occur
     """
     # Verify collection exists and user owns it
-    collection = await db.get_collection_by_id(collection_id, user_id)
+    collection = await db.get_collection_by_id(collection_id, user.user_id)
     if not collection:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -568,7 +575,7 @@ async def upload_documents(
                 gcs_metadata = {
                     "collection_id": str(collection_id),
                     "collection_name": collection["name"],
-                    "user_id": user_id,
+                    "user_id": user.user_id,
                     "original_filename": file.filename,
                 }
 
@@ -628,7 +635,7 @@ async def upload_documents(
             vertex_metadata = {
                 "collection_id": str(collection_id),
                 "collection_name": collection["name"],
-                "user_id": user_id,
+                "user_id": user.user_id,
                 "original_filename": doc["original_filename"],
             }
 
@@ -674,7 +681,7 @@ async def upload_documents(
             # Replace all invalid characters (periods, spaces, etc.) with underscores
             vertex_doc_id = re.sub(r'[^a-zA-Z0-9_-]', '_', vertex_doc_id)
             doc_id = await db.insert_document(
-                user_id=user_id,
+                user_id=user.user_id,
                 collection_id=collection_id,
                 original_filename=doc["original_filename"],
                 gcs_blob_name=doc["gcs_blob_name"],
@@ -726,20 +733,21 @@ async def upload_documents(
 
 @app.get("/documents", tags=["Documents"])
 async def list_user_documents(
-    user_id: str = Query(..., description="User ID to list documents for"),
+    user: Annotated[AuthenticatedUser, Depends(resolve_user)],
     limit: int = Query(100, ge=1, le=1000, description="Maximum number of documents to return"),
     offset: int = Query(0, ge=0, description="Number of documents to skip"),
     status: Optional[str] = Query(None, description="Filter by status (e.g., 'uploaded')"),
 ):
     """
-    List ALL documents for a specific user across all collections (fast PostgreSQL query).
+    List ALL documents for the authenticated user across all collections (fast PostgreSQL query).
 
     This endpoint queries PostgreSQL directly for fast results without
     hitting Vertex AI Search API. Documents include collection_name
     to show which collection they belong to.
 
+    Requires authentication via Bearer token.
+
     Args:
-        user_id: User identifier
         limit: Maximum number of documents to return (default 100, max 1000)
         offset: Number of documents to skip for pagination
         status: Optional status filter
@@ -750,14 +758,14 @@ async def list_user_documents(
     try:
         # Get documents from PostgreSQL
         documents = await db.list_documents_by_user(
-            user_id=user_id,
+            user_id=user.user_id,
             limit=limit,
             offset=offset,
             status=status,
         )
 
         # Get total count for pagination
-        total_count = await db.count_user_documents(user_id=user_id, status=status)
+        total_count = await db.count_user_documents(user_id=user.user_id, status=status)
 
         # Convert datetime objects and UUIDs to strings for JSON serialization
         for doc in documents:
@@ -774,7 +782,7 @@ async def list_user_documents(
                 doc["collection_id"] = str(doc["collection_id"])
 
         return {
-            "user_id": user_id,
+            "user_id": user.user_id,
             "total_count": total_count,
             "limit": limit,
             "offset": offset,
@@ -783,7 +791,7 @@ async def list_user_documents(
         }
 
     except Exception as e:
-        logger.error(f"Error listing documents for user {user_id}: {str(e)}")
+        logger.error(f"Error listing documents for user {user.user_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list documents: {str(e)}",
@@ -870,7 +878,7 @@ async def verify_document_in_vertex_ai(
 @app.delete("/documents/{doc_id}", tags=["Documents"])
 async def delete_document(
     doc_id: UUID,
-    user_id: str = Query(..., description="User ID for ownership verification"),
+    user: Annotated[AuthenticatedUser, Depends(resolve_user)],
 ):
     """
     Delete a document with ownership verification.
@@ -881,9 +889,10 @@ async def delete_document(
     3. Deletes the document from Vertex AI Search
     4. Deletes the metadata from PostgreSQL
 
+    Requires authentication via Bearer token.
+
     Args:
         doc_id: Document UUID from PostgreSQL
-        user_id: User ID for ownership verification
 
     Returns:
         Success message with deletion details
@@ -901,9 +910,9 @@ async def delete_document(
                 detail=f"Document {doc_id} not found",
             )
 
-        if document["user_id"] != user_id:
+        if document["user_id"] != user.user_id:
             logger.warning(
-                f"Unauthorized delete attempt: user {user_id} tried to delete "
+                f"Unauthorized delete attempt: user {user.user_id} tried to delete "
                 f"document {doc_id} owned by {document['user_id']}"
             )
             raise HTTPException(
@@ -962,7 +971,7 @@ async def delete_document(
                     )
                     await deletion_queue.enqueue_deletion(
                         vertex_ai_doc_id=document["vertex_ai_doc_id"],
-                        user_id=user_id,
+                        user_id=user.user_id,
                         original_filename=document["original_filename"],
                     )
                 else:
@@ -972,12 +981,12 @@ async def delete_document(
             # Add to retry queue
             await deletion_queue.enqueue_deletion(
                 vertex_ai_doc_id=document["vertex_ai_doc_id"],
-                user_id=user_id,
+                user_id=user.user_id,
                 original_filename=document["original_filename"],
             )
 
         # Step 4: Delete from PostgreSQL
-        db_deleted = await db.delete_document(doc_id=doc_id, user_id=user_id)
+        db_deleted = await db.delete_document(doc_id=doc_id, user_id=user.user_id)
 
         if not db_deleted:
             raise HTTPException(

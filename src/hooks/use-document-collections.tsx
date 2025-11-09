@@ -3,8 +3,10 @@
 import { useState, useCallback } from "react";
 import { documentApiClient } from "@/lib/document-api-client";
 import { Collection, Document } from "@/types/document-api";
+import { useAuthContext } from "@/providers/Auth";
 
-export function useDocumentCollections(userId: string) {
+export function useDocumentCollections() {
+  const { session } = useAuthContext();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -13,24 +15,34 @@ export function useDocumentCollections(userId: string) {
     try {
       setLoading(true);
       setError(null);
-      const response = await documentApiClient.listCollections(userId);
+      const accessToken = session?.accessToken;
+      if (!accessToken) {
+        throw new Error("Not authenticated");
+      }
+      const response = await documentApiClient.listCollections({
+        accessToken,
+      });
       setCollections(response.collections);
     } catch (err) {
       setError(err as Error);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [session?.accessToken]);
 
   const createCollection = useCallback(
     async (name: string, description?: string) => {
       try {
         setLoading(true);
         setError(null);
+        const accessToken = session?.accessToken;
+        if (!accessToken) {
+          throw new Error("Not authenticated");
+        }
         const newCollection = await documentApiClient.createCollection(
-          userId,
           name,
           description,
+          accessToken,
         );
         setCollections((prev) => [...prev, newCollection]);
         return newCollection;
@@ -41,7 +53,7 @@ export function useDocumentCollections(userId: string) {
         setLoading(false);
       }
     },
-    [userId],
+    [session?.accessToken],
   );
 
   const deleteCollection = useCallback(
@@ -49,7 +61,11 @@ export function useDocumentCollections(userId: string) {
       try {
         setLoading(true);
         setError(null);
-        await documentApiClient.deleteCollection(collectionId, userId);
+        const accessToken = session?.accessToken;
+        if (!accessToken) {
+          throw new Error("Not authenticated");
+        }
+        await documentApiClient.deleteCollection(collectionId, accessToken);
         setCollections((prev) => prev.filter((col) => col.id !== collectionId));
       } catch (err) {
         setError(err as Error);
@@ -58,15 +74,19 @@ export function useDocumentCollections(userId: string) {
         setLoading(false);
       }
     },
-    [userId],
+    [session?.accessToken],
   );
 
   const refreshCollection = useCallback(
     async (collectionId: string) => {
       try {
+        const accessToken = session?.accessToken;
+        if (!accessToken) {
+          throw new Error("Not authenticated");
+        }
         const updated = await documentApiClient.getCollection(
           collectionId,
-          userId,
+          accessToken,
         );
         setCollections((prev) =>
           prev.map((col) => (col.id === collectionId ? updated : col)),
@@ -75,7 +95,7 @@ export function useDocumentCollections(userId: string) {
         console.error("Failed to refresh collection:", err);
       }
     },
-    [userId],
+    [session?.accessToken],
   );
 
   return {
@@ -89,7 +109,8 @@ export function useDocumentCollections(userId: string) {
   };
 }
 
-export function useDocuments(userId: string) {
+export function useDocuments() {
+  const { session } = useAuthContext();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -100,9 +121,15 @@ export function useDocuments(userId: string) {
       try {
         setLoading(true);
         setError(null);
+        const accessToken = session?.accessToken;
+        if (!accessToken) {
+          throw new Error("Not authenticated");
+        }
         const response = await documentApiClient.listCollectionDocuments(
           collectionId,
-          userId,
+          {
+            accessToken,
+          },
         );
         setDocuments(response.documents);
       } catch (err) {
@@ -111,7 +138,7 @@ export function useDocuments(userId: string) {
         setLoading(false);
       }
     },
-    [userId],
+    [session?.accessToken],
   );
 
   const uploadDocuments = useCallback(
@@ -120,11 +147,17 @@ export function useDocuments(userId: string) {
         setLoading(true);
         setError(null);
         setUploadProgress(0);
+        const accessToken = session?.accessToken;
+        if (!accessToken) {
+          throw new Error("Not authenticated");
+        }
         const response = await documentApiClient.uploadDocuments(
-          userId,
           collectionId,
           files,
-          (progress) => setUploadProgress(progress),
+          {
+            accessToken,
+            onProgress: (progress) => setUploadProgress(progress),
+          },
         );
         // Refresh document list after upload
         await loadDocuments(collectionId);
@@ -137,7 +170,7 @@ export function useDocuments(userId: string) {
         setUploadProgress(0);
       }
     },
-    [userId, loadDocuments],
+    [session?.accessToken, loadDocuments],
   );
 
   const deleteDocument = useCallback(
@@ -145,7 +178,11 @@ export function useDocuments(userId: string) {
       try {
         setLoading(true);
         setError(null);
-        await documentApiClient.deleteDocument(documentId, userId);
+        const accessToken = session?.accessToken;
+        if (!accessToken) {
+          throw new Error("Not authenticated");
+        }
+        await documentApiClient.deleteDocument(documentId, accessToken);
         setDocuments((prev) => prev.filter((doc) => doc.id !== documentId));
       } catch (err) {
         setError(err as Error);
@@ -154,7 +191,7 @@ export function useDocuments(userId: string) {
         setLoading(false);
       }
     },
-    [userId],
+    [session?.accessToken],
   );
 
   return {

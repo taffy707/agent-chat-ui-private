@@ -1,0 +1,25 @@
+# Exclude environment files from Docker builds
+.env
+.env.*
+
+# Exclude Git files
+.git
+.gitignore
+
+# Exclude Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Exclude docs and tests
+*.md
+tests/
+docs/
+
+# Exclude development files
+.vscode/
+.idea/
+*.swp
+*.swo

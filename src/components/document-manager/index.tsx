@@ -38,7 +38,7 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
     createCollection,
     deleteCollection,
     refreshCollection,
-  } = useDocumentCollections(userId);
+  } = useDocumentCollections();
 
   const {
     documents,
@@ -47,7 +47,7 @@ export function DocumentManager({ userId, onClose }: DocumentManagerProps) {
     loadDocuments,
     uploadDocuments,
     deleteDocument,
-  } = useDocuments(userId);
+  } = useDocuments();
 
   const [selectedCollection, setSelectedCollection] =
     useState<Collection | null>(null);

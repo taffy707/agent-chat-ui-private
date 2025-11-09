@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str
 
+    # Supabase Authentication Settings
+    SUPABASE_URL: str
+    SUPABASE_ANON_KEY: str
+
     # Supported file types
     ALLOWED_EXTENSIONS: List[str] = [".pdf", ".docx", ".txt", ".html", ".htm"]
     ALLOWED_MIME_TYPES: List[str] = [

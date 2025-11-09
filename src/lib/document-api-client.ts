@@ -20,6 +20,17 @@ class DocumentApiClient {
     this.baseUrl = baseUrl;
   }
 
+  /**
+   * Create request headers with optional JWT authentication
+   */
+  private getHeaders(accessToken?: string): HeadersInit {
+    const headers: HeadersInit = {};
+    if (accessToken) {
+      headers["Authorization"] = `Bearer ${accessToken}`;
+    }
+    return headers;
+  }
+
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const error: ApiError = await response
@@ -37,17 +48,17 @@ class DocumentApiClient {
   // ============================================================
 
   async createCollection(
-    userId: string,
     name: string,
     description?: string,
+    accessToken?: string,
   ): Promise<Collection> {
     const formData = new FormData();
-    formData.append("user_id", userId);
     formData.append("name", name);
     if (description) formData.append("description", description);
 
     const response = await fetch(`${this.baseUrl}/collections`, {
       method: "POST",
+      headers: this.getHeaders(accessToken),
       body: formData,
     });
 
@@ -55,38 +66,42 @@ class DocumentApiClient {
   }
 
   async listCollections(
-    userId: string,
-    options?: { limit?: number; offset?: number },
+    options?: { limit?: number; offset?: number; accessToken?: string },
   ): Promise<CollectionListResponse> {
     const params = new URLSearchParams({
-      user_id: userId,
       limit: (options?.limit ?? 100).toString(),
       offset: (options?.offset ?? 0).toString(),
     });
 
-    const response = await fetch(`${this.baseUrl}/collections?${params}`);
+    const response = await fetch(`${this.baseUrl}/collections?${params}`, {
+      headers: this.getHeaders(options?.accessToken),
+    });
     return this.handleResponse<CollectionListResponse>(response);
   }
 
   async getCollection(
     collectionId: string,
-    userId: string,
+    accessToken?: string,
   ): Promise<Collection> {
-    const params = new URLSearchParams({ user_id: userId });
     const response = await fetch(
-      `${this.baseUrl}/collections/${collectionId}?${params}`,
+      `${this.baseUrl}/collections/${collectionId}`,
+      {
+        headers: this.getHeaders(accessToken),
+      },
     );
     return this.handleResponse<Collection>(response);
   }
 
   async deleteCollection(
     collectionId: string,
-    userId: string,
+    accessToken?: string,
   ): Promise<DeleteResponse> {
-    const params = new URLSearchParams({ user_id: userId });
     const response = await fetch(
-      `${this.baseUrl}/collections/${collectionId}?${params}`,
-      { method: "DELETE" },
+      `${this.baseUrl}/collections/${collectionId}`,
+      {
+        method: "DELETE",
+        headers: this.getHeaders(accessToken),
+      },
     );
     return this.handleResponse<DeleteResponse>(response);
   }
@@ -96,20 +111,21 @@ class DocumentApiClient {
   // ============================================================
 
   async uploadDocuments(
-    userId: string,
     collectionId: string,
     files: File[],
-    onProgress?: (progress: number) => void,
+    options?: {
+      accessToken?: string;
+      onProgress?: (progress: number) => void;
+    },
   ): Promise<UploadResponse> {
     const formData = new FormData();
-    formData.append("user_id", userId);
     formData.append("collection_id", collectionId);
 
     files.forEach((file) => {
       formData.append("files", file);
     });
 
-    if (onProgress) {
+    if (options?.onProgress) {
       // Use XMLHttpRequest for upload progress tracking
       return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -117,7 +133,7 @@ class DocumentApiClient {
         xhr.upload.addEventListener("progress", (e) => {
           if (e.lengthComputable) {
             const percentComplete = Math.round((e.loaded / e.total) * 100);
-            onProgress(percentComplete);
+            options.onProgress!(percentComplete);
           }
         });
 
@@ -134,12 +150,19 @@ class DocumentApiClient {
         });
 
         xhr.open("POST", `${this.baseUrl}/upload`);
+
+        // Add Authorization header if token provided
+        if (options?.accessToken) {
+          xhr.setRequestHeader("Authorization", `Bearer ${options.accessToken}`);
+        }
+
         xhr.send(formData);
       });
     }
 
     const response = await fetch(`${this.baseUrl}/upload`, {
       method: "POST",
+      headers: this.getHeaders(options?.accessToken),
       body: formData,
     });
 
@@ -148,27 +171,31 @@ class DocumentApiClient {
 
   async listCollectionDocuments(
     collectionId: string,
-    userId: string,
-    options?: { limit?: number; offset?: number },
+    options?: { limit?: number; offset?: number; accessToken?: string },
   ): Promise<DocumentListResponse> {
     const params = new URLSearchParams({
-      user_id: userId,
       limit: (options?.limit ?? 100).toString(),
       offset: (options?.offset ?? 0).toString(),
     });
 
     const response = await fetch(
       `${this.baseUrl}/collections/${collectionId}/documents?${params}`,
+      {
+        headers: this.getHeaders(options?.accessToken),
+      },
     );
     return this.handleResponse<DocumentListResponse>(response);
   }
 
   async listAllDocuments(
-    userId: string,
-    options?: { limit?: number; offset?: number; status?: string },
+    options?: {
+      limit?: number;
+      offset?: number;
+      status?: string;
+      accessToken?: string;
+    },
   ): Promise<DocumentListResponse> {
     const params = new URLSearchParams({
-      user_id: userId,
       limit: (options?.limit ?? 100).toString(),
       offset: (options?.offset ?? 0).toString(),
     });
@@ -177,19 +204,20 @@ class DocumentApiClient {
       params.append("status", options.status);
     }
 
-    const response = await fetch(`${this.baseUrl}/documents?${params}`);
+    const response = await fetch(`${this.baseUrl}/documents?${params}`, {
+      headers: this.getHeaders(options?.accessToken),
+    });
     return this.handleResponse<DocumentListResponse>(response);
   }
 
   async deleteDocument(
     documentId: string,
-    userId: string,
+    accessToken?: string,
   ): Promise<DeleteResponse> {
-    const params = new URLSearchParams({ user_id: userId });
-    const response = await fetch(
-      `${this.baseUrl}/documents/${documentId}?${params}`,
-      { method: "DELETE" },
-    );
+    const response = await fetch(`${this.baseUrl}/documents/${documentId}`, {
+      method: "DELETE",
+      headers: this.getHeaders(accessToken),
+    });
     return this.handleResponse<DeleteResponse>(response);
   }
 

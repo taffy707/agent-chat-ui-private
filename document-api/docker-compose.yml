@@ -19,6 +19,10 @@ services:
       POSTGRES_PASSWORD: ""
       POSTGRES_DB: vertex_ai_documents
 
+      # Supabase Authentication Configuration
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+
       # Optional: Google Cloud Credentials
       # Mount your credentials file and uncomment this:
       # GOOGLE_APPLICATION_CREDENTIALS: /app/credentials/key.json
