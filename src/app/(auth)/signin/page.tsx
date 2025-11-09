@@ -19,6 +19,9 @@ import { useAuthContext } from "@/providers/Auth";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { googleAuthDisabled } from "@/lib/utils";
 
+// Force dynamic rendering to allow useSearchParams()
+export const dynamic = 'force-dynamic';
+
 export default function SignInPage() {
   const { signIn, signInWithGoogle, isAuthenticated } = useAuthContext();
   const router = useRouter();
