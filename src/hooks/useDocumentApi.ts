@@ -20,7 +20,7 @@ export function useDocumentApi() {
    * Get the access token from the current session
    */
   const getAccessToken = (): string | undefined => {
-    return session?.accessToken;
+    return session?.accessToken ?? undefined;
   };
 
   /**
